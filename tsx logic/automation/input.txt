@@ -1,11 +1,18 @@
 ```tsx
 import React from 'react';
 
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
 
 export const compositionConfig = {
-  id: 'Scene01_HookDeduction',
-  durationInSeconds: 29.453,
+  id: 'Scene11BateauFantome',
+  durationInSeconds: 30,
   fps: 30,
   width: 1920,
   height: 1080,
@@ -16,145 +23,373 @@ const seededRandom = (seed: number): number => {
   return x - Math.floor(x);
 };
 
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
 const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
 
-const Scene01_HookDeduction: React.FC = () => {
+const Scene11BateauFantome: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
   const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
 
   const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
   });
 
-  // Beats: 0s hook question → 7s slam ₹5000 → 14s refund stuck → 21s Kunal intro
-  const slamF = 210;
-  const impact = frame >= slamF && frame < slamF + 20;
-  const shakeAmt = impact ? interpolate(frame, [slamF, slamF + 20], [16, 0]) : 0;
-  const shakeX = Math.sin(frame * 3.3) * shakeAmt;
-  const shakeY = Math.cos(frame * 2.7) * shakeAmt * 0.6;
+  // Slow camera push-in + horizontal drift
+  const camScale = interpolate(frame, [0, durationInFrames], [1.09, 1.0], {
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.quad),
+  });
+  const camX = Math.sin(frame * 0.008) * 20;
 
-  const camZoom = interpolate(frame, [0, durationInFrames], [1, 1.09], { easing: Easing.inOut(Easing.quad) });
-  const money = Math.floor(interpolate(frame, [slamF, slamF + 45], [0, 5000], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }));
+  const boatIn = sp(18, { damping: 14 });
+  const waterY = Math.sin(frame * 0.05) * 7;
+  const boatTilt = Math.sin(frame * 0.045) * 2.4;
+
+  const counter = Math.round(
+    interpolate(frame, [130, 330], [0, 4000], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  );
+  const impact = frame > 330 && frame < 348 ? Math.sin(frame * 2.6) * 7 : 0;
+
+  const marqueeX = -((frame * 2.4) % 960);
 
   return (
     <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(circle at 30% 25%, #6A57C4 0%, ${BG} 45%, ${DEEP} 100%)`,
+        }}
+      />
 
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `radial-gradient(120% 90% at 25% 15%, ${BG} 30%, ${DEEP} 100%)` }} />
+      {/* Animated shape layers — large transparent geometry drifting */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: 120 + Math.sin(frame * 0.01) * 40,
+            top: -180,
+            width: 900,
+            height: 900,
+            borderRadius: '50%',
+            border: `3px solid ${LIGHT}`,
+            opacity: 0.06,
+            transform: `rotate(${frame * 0.06}deg) scale(${1 + Math.sin(frame * 0.02) * 0.04})`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            right: -220,
+            bottom: -240,
+            width: 820,
+            height: 820,
+            backgroundColor: LIGHT,
+            opacity: 0.04,
+            transform: `rotate(${-frame * 0.05}deg)`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: '52%',
+            top: 120,
+            width: 0,
+            height: 0,
+            borderLeft: '260px solid transparent',
+            borderRight: '260px solid transparent',
+            borderBottom: `440px solid ${GOLD}`,
+            opacity: 0.05,
+            transform: `rotate(${18 + Math.sin(frame * 0.014) * 6}deg)`,
+          }}
+        />
+      </AbsoluteFill>
 
-      {/* Punk collage shape layers */}
-      <div style={{ position: 'absolute', top: -120, left: -100, width: 700, height: 260, background: PAPER, opacity: 0.06, transform: `rotate(${-8 + Math.sin(frame * 0.02) * 2}deg)` }} />
-      <div style={{ position: 'absolute', bottom: -160, right: -120, width: 820, height: 300, background: INK, opacity: 0.08, transform: `rotate(${6 + Math.cos(frame * 0.018) * 2}deg)` }} />
-      {/* Torn tape strips */}
-      <div style={{ position: 'absolute', top: 120, right: 180, width: 320, height: 46, background: 'rgba(238,245,255,0.30)', transform: 'rotate(-12deg)' }} />
-      <div style={{ position: 'absolute', bottom: 200, left: 140, width: 260, height: 40, background: 'rgba(25,25,25,0.22)', transform: 'rotate(9deg)' }} />
+      {/* Motion texture — halftone dot field */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `radial-gradient(${LIGHT} 2px, transparent 2px)`,
+          backgroundSize: '34px 34px',
+          opacity: 0.07,
+          transform: `translate(${Math.sin(frame * 0.02) * 16}px, ${Math.cos(frame * 0.02) * 12}px)`,
+        }}
+      />
 
-      {/* Halftone texture */}
-      <AbsoluteFill style={{ backgroundImage: `radial-gradient(${INK} 2px, transparent 2px)`, backgroundSize: '28px 28px', opacity: 0.06 }} />
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 28 }).map((_, i) => {
+          const s = seededRandom(i + 3);
+          const s2 = seededRandom(i + 71);
+          const size = 4 + s * 9;
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 + frame * (0.05 + s * 0.08)) % 110) - 5}%`,
+                width: size,
+                height: size,
+                borderRadius: i % 3 === 0 ? 2 : '50%',
+                backgroundColor: i % 4 === 0 ? GOLD : LIGHT,
+                opacity: 0.15 + s2 * 0.3,
+              }}
+            />
+          );
+        })}
+      </AbsoluteFill>
 
-      {/* Particles */}
-      {Array.from({ length: 14 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 1) * 1920,
-          top: (seededRandom(i + 40) * 1080 + frame * (0.25 + seededRandom(i) * 0.4)) % 1080,
-          width: 5 + seededRandom(i + 7) * 7, height: 5 + seededRandom(i + 7) * 7,
-          background: i % 3 === 0 ? GOLD : PAPER, opacity: 0.28, transform: `rotate(${frame + i * 30}deg)`,
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `scale(${camZoom}) translate(${shakeX}px, ${shakeY}px)` }}>
-
-        {/* Beat 1: hook question — punk sticker */}
-        <div style={{
-          position: 'absolute', top: 130, left: 150, transform: `rotate(-3deg) scale(${sp(5)})`,
-          background: INK, color: PAPER, padding: '26px 44px', boxShadow: `12px 12px 0 ${DEEP}`,
-          fontFamily: 'Yantra One', fontSize: 76, lineHeight: 1.15, maxWidth: 1050,
-        }}>
-          बैंक से पैसा कटा —<br />बिना तुम्हारी मर्ज़ी के?
+      {/* Main content with spring animations */}
+      <AbsoluteFill
+        style={{
+          transform: `scale(${camScale}) translate(${camX + impact}px, ${impact * 0.4}px)`,
+        }}
+      >
+        {/* Collage tape strip — headline anchor */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 110,
+            top: 132,
+            padding: '14px 34px',
+            backgroundColor: GOLD,
+            transform: `rotate(-2.4deg) scale(${sp(6)})`,
+            clipPath: 'polygon(0% 6%, 100% 0%, 99% 96%, 1% 100%)',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 30,
+              letterSpacing: 6,
+              color: INK,
+              fontWeight: 700,
+            }}
+          >
+            COÛT N°2 / ENTRETIEN
+          </span>
         </div>
 
-        {/* Warning triangle icon, micro-wobble */}
-        <div style={{ position: 'absolute', top: 150, right: 200, transform: `scale(${sp(40)}) rotate(${Math.sin(frame * 0.08) * 6}deg)`, opacity: 0.95 }}>
-          <svg width="170" height="150" viewBox="0 0 100 90">
-            <polygon points="50,4 96,86 4,86" fill={GOLD} stroke={INK} strokeWidth="5" />
-            <rect x="45" y="28" width="10" height="32" fill={INK} />
-            <rect x="45" y="66" width="10" height="10" fill={INK} />
+        <div
+          style={{
+            position: 'absolute',
+            left: 110,
+            top: 208,
+            width: 900,
+            transform: `translateY(${interpolate(sp(16), [0, 1], [60, 0])}px)`,
+            opacity: sp(16),
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 108,
+              lineHeight: 0.94,
+              color: LIGHT,
+              textTransform: 'uppercase',
+            }}
+          >
+            IL NE SORT
+          </div>
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 108,
+              lineHeight: 0.94,
+              color: GOLD,
+              textTransform: 'uppercase',
+            }}
+          >
+            JAMAIS DU PORT
+          </div>
+          <div
+            style={{
+              marginTop: 26,
+              fontFamily: 'Montserrat, Poppins, sans-serif',
+              fontSize: 44,
+              fontWeight: 500,
+              color: LIGHT,
+              opacity: 0.9,
+              maxWidth: 760,
+            }}
+          >
+            Et pourtant, la facture tourne toute l’année.
+          </div>
+        </div>
+
+        {/* Icon graphic — boat on ponton, micro rocking */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 150,
+            top: 250,
+            transform: `translateY(${waterY + interpolate(boatIn, [0, 1], [120, 0])}px) rotate(${boatTilt}deg) scale(${boatIn})`,
+            opacity: boatIn,
+          }}
+        >
+          <svg width="520" height="420" viewBox="0 0 520 420">
+            <rect x="40" y="20" width="440" height="360" fill={DEEP} opacity="0.35" />
+            <line x1="260" y1="60" x2="260" y2="230" stroke={LIGHT} strokeWidth="8" />
+            <polygon points="266,70 400,225 266,225" fill={LIGHT} opacity="0.92" />
+            <polygon points="254,110 150,225 254,225" fill={GOLD} opacity="0.9" />
+            <path d="M90 240 L430 240 L370 320 L150 320 Z" fill={LIGHT} />
+            <rect x="150" y="258" width="60" height="26" fill={INK} opacity="0.75" />
+            <rect x="230" y="258" width="60" height="26" fill={INK} opacity="0.75" />
+            <rect x="310" y="258" width="60" height="26" fill={INK} opacity="0.75" />
+            <line x1="60" y1="345" x2="470" y2="345" stroke={LILAC} strokeWidth="6" opacity="0.8" />
+            <line
+              x1="60"
+              y1="368"
+              x2="470"
+              y2="368"
+              stroke={LILAC}
+              strokeWidth="4"
+              opacity="0.5"
+              strokeDasharray="26 18"
+              strokeDashoffset={-frame * 1.6}
+            />
           </svg>
         </div>
 
-        {/* Beat 2: ₹5,000 slam with live counter */}
-        <div style={{
-          position: 'absolute', top: 400, left: 0, right: 0, textAlign: 'center',
-          transform: `scale(${interpolate(sp(slamF, { stiffness: 200, damping: 10 }), [0, 1], [2.6, 1])}) rotate(-2deg)`,
-          opacity: frame >= slamF ? 1 : 0,
-        }}>
-          <div style={{ fontFamily: 'Yantra One', fontSize: 210, color: PAPER, textShadow: `14px 14px 0 ${INK}`, letterSpacing: 4 }}>
-            -₹{money.toLocaleString('en-IN')}
+        {/* Data card — annual burn counter */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 110,
+            bottom: 190,
+            padding: '30px 46px',
+            backgroundColor: LIGHT,
+            transform: `rotate(1.6deg) scale(${sp(110, { damping: 11 })})`,
+            boxShadow: `18px 18px 0px ${INK}`,
+            clipPath: 'polygon(0% 4%, 100% 0%, 100% 95%, 1% 100%)',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 28,
+              letterSpacing: 3,
+              color: INK,
+              opacity: 0.7,
+            }}
+          >
+            BATEAU 40 000 € — RÈGLE DES 10 %
           </div>
-          <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 50, color: INK, marginTop: -10 }}>
-            सिर्फ़ एक तारीख भूलने पर
+          <div
+            style={{
+              fontFamily: 'Clash Display, Anton, sans-serif',
+              fontSize: 150,
+              lineHeight: 1,
+              color: INK,
+              fontWeight: 700,
+            }}
+          >
+            {counter.toLocaleString('fr-FR')} €
+          </div>
+          <div
+            style={{
+              fontFamily: 'Montserrat, Poppins, sans-serif',
+              fontSize: 38,
+              fontWeight: 600,
+              color: INK,
+              opacity: 0.75,
+            }}
+          >
+            par an, même à quai
           </div>
         </div>
 
-        {/* Beat 3: refund stuck card slides in */}
-        <div style={{
-          position: 'absolute', bottom: 190, left: 150,
-          transform: `translateX(${interpolate(sp(430), [0, 1], [-700, 0])}px) rotate(2deg)`,
-          background: PAPER, color: INK, padding: '24px 40px', boxShadow: `10px 10px 0 ${INK}`,
-          fontFamily: 'Inter, Poppins', fontWeight: 800, fontSize: 46, display: 'flex', alignItems: 'center', gap: 24,
-        }}>
-          <svg width="54" height="54" viewBox="0 0 24 24" style={{ transform: `rotate(${Math.sin(frame * 0.1) * 8}deg)` }}>
-            <circle cx="12" cy="12" r="10" fill="none" stroke={DEEP} strokeWidth="2.4" />
-            <path d="M12 6 v6 l4 3" stroke={DEEP} strokeWidth="2.4" fill="none" strokeLinecap="round" />
-          </svg>
-          REFUND भी अटक गया
-        </div>
-
-        {/* Beat 4: August 2026 + Kunal chip */}
-        <div style={{
-          position: 'absolute', bottom: 190, right: 150, textAlign: 'right',
-          opacity: interpolate(frame, [640, 670], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-          transform: `translateY(${interpolate(sp(640), [0, 1], [80, 0])}px)`,
-        }}>
-          <div style={{ fontFamily: 'Yantra One', fontSize: 96, color: GOLD, textShadow: `8px 8px 0 ${INK}` }}>AUGUST 2026</div>
-          <div style={{ display: 'inline-block', marginTop: 16, background: INK, color: PAPER, padding: '12px 26px', fontFamily: 'Inter, Poppins', fontWeight: 700, fontSize: 34, transform: 'rotate(-1.5deg)' }}>
-            KUNAL · PROBUFFET HQ
+        {/* Marquee strip — punk collage band */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: 92,
+            width: '100%',
+            height: 62,
+            backgroundColor: INK,
+            transform: 'rotate(-1.1deg)',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            opacity: interpolate(frame, [60, 90], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              transform: `translateX(${marqueeX}px)`,
+              whiteSpace: 'nowrap',
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 30,
+              letterSpacing: 8,
+              color: GOLD,
+            }}
+          >
+            {Array.from({ length: 8 }).map((_, i) => (
+              <span key={i} style={{ paddingRight: 60 }}>
+                PLACE AU PORT · ASSURANCE · ANTIFOULING · HIVERNAGE ·
+              </span>
+            ))}
           </div>
         </div>
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 100%)',
+        }}
+      />
 
       {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: interpolate(frame, [0, 40], [0, 0.3], { extrapolateRight: 'clamp' }),
+        }}
+      >
+        Matures Finance
       </div>
     </AbsoluteFill>
   );
 };
 
-export default Scene01_HookDeduction;
+export default Scene11BateauFantome;
 ```
 
 ```tsx
 import React from 'react';
 
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
 
 export const compositionConfig = {
-  id: 'Scene02_FiveDeadlines',
-  durationInSeconds: 29.453,
+  id: 'Scene12EpargneConcentree',
+  durationInSeconds: 30,
   fps: 30,
   width: 1920,
   height: 1080,
@@ -165,290 +400,1293 @@ const seededRandom = (seed: number): number => {
   return x - Math.floor(x);
 };
 
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
 const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
 
-const Scene02_FiveDeadlines: React.FC = () => {
+const BARS = [
+  { label: 'T2 2025', value: 18.7 },
+  { label: 'T3 2025', value: 18.3 },
+  { label: 'FIN 2025', value: 17.19 },
+];
+
+const Scene12EpargneConcentree: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
   const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
 
   const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
   });
 
-  // Camera pans left → right slowly
-  const camX = interpolate(frame, [0, durationInFrames], [30, -30], { easing: Easing.inOut(Easing.quad) });
+  // Camera — slow tilt/pan
+  const camY = interpolate(frame, [0, durationInFrames], [30, -20], { extrapolateRight: 'clamp' });
+  const camScale = interpolate(frame, [0, 120], [1.06, 1.0], {
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
 
-  const deadlines = ['ITR-3 / ITR-4', 'E-VERIFY 30 DIN', 'CKYC 2.0', 'RBI POLICY', 'BANK CHARGES'];
-  const personas = [
-    { label: 'SALARIED', icon: 'M4 20 h16 M6 20 V9 h12 v11 M9 9 V6 h6 v3' },
-    { label: 'FREELANCER', icon: 'M4 17 h16 M4 17 V7 h16 v10 M9 20 h6' },
-    { label: 'BUSINESS', icon: 'M3 9 h18 v11 H3 z M9 9 V6 h6 v3' },
-    { label: 'BANK HOLDER', icon: 'M3 10 L12 4 l9 6 M5 10 v8 m5 -8 v8 m4 -8 v8 m5 -8 v8 M3 20 h18' },
-  ];
+  const revealSlash = interpolate(frame, [220, 250], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
 
-  const ninetyOp = interpolate(frame, [540, 570], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const pct = Math.floor(interpolate(frame, [540, 610], [0, 90], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }));
+  const twoThirds = interpolate(frame, [300, 400], [0, 0.66], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
+
+  const ringR = 130;
+  const ringC = 2 * Math.PI * ringR;
 
   return (
     <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(135deg, ${DEEP} 0%, ${BG} 40%, #6552CB 100%)`,
+        }}
+      />
 
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `linear-gradient(135deg, ${BG} 45%, ${DEEP} 100%)` }} />
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: -160,
+            top: 200 + Math.sin(frame * 0.012) * 30,
+            width: 700,
+            height: 700,
+            backgroundColor: LIGHT,
+            opacity: 0.045,
+            transform: `rotate(${frame * 0.04}deg)`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            right: 90,
+            top: -140,
+            width: 640,
+            height: 640,
+            borderRadius: '50%',
+            backgroundColor: GOLD,
+            opacity: 0.05,
+            transform: `scale(${1 + Math.sin(frame * 0.025) * 0.06})`,
+          }}
+        />
+      </AbsoluteFill>
 
-      {/* Collage shapes: ripped strips */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '110%', height: 130, background: INK, opacity: 0.10, transform: `rotate(-2deg) translateX(${Math.sin(frame * 0.015) * 15}px)` }} />
-      <div style={{ position: 'absolute', bottom: -30, left: -50, width: '115%', height: 150, background: PAPER, opacity: 0.07, transform: 'rotate(1.6deg)' }} />
-      <div style={{ position: 'absolute', top: 300, right: -90, width: 380, height: 380, borderRadius: '50%', border: `26px solid ${GOLD}`, opacity: 0.10, transform: `scale(${1 + Math.sin(frame * 0.03) * 0.04})` }} />
+      {/* Motion texture — vertical scan lines */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `repeating-linear-gradient(90deg, ${LIGHT} 0px, ${LIGHT} 2px, transparent 2px, transparent 60px)`,
+          opacity: 0.06,
+          transform: `translateX(${(frame * 0.4) % 60}px)`,
+        }}
+      />
 
-      {/* Grid texture */}
-      <AbsoluteFill style={{
-        backgroundImage: `linear-gradient(${INK} 1px, transparent 1px), linear-gradient(90deg, ${INK} 1px, transparent 1px)`,
-        backgroundSize: '90px 90px', opacity: 0.05,
-      }} />
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 24 }).map((_, i) => {
+          const s = seededRandom(i + 11);
+          const s2 = seededRandom(i + 44);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 - frame * (0.04 + s * 0.06)) % 110 + 110) % 110}%`,
+                width: 6 + s2 * 8,
+                height: 6 + s2 * 8,
+                backgroundColor: i % 3 === 0 ? GOLD : LILAC,
+                opacity: 0.2 + s * 0.25,
+                transform: `rotate(${frame * (0.3 + s)}deg)`,
+              }}
+            />
+          );
+        })}
+      </AbsoluteFill>
 
-      {/* Particles */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: (seededRandom(i + 3) * 1920 + frame * 0.3) % 1920,
-          top: seededRandom(i + 21) * 1080,
-          width: 6, height: 6, borderRadius: i % 2 ? 0 : '50%',
-          background: i % 3 === 0 ? GOLD : PAPER, opacity: 0.25,
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `translateX(${camX}px)` }}>
-
-        {/* Headline sticker */}
-        <div style={{
-          position: 'absolute', top: 90, left: 0, right: 0, textAlign: 'center',
-          transform: `translateY(${interpolate(sp(5), [0, 1], [-120, 0])}px) rotate(-1.2deg)`,
-        }}>
-          <span style={{ background: INK, color: GOLD, padding: '18px 46px', fontFamily: 'Yantra One', fontSize: 92, boxShadow: `10px 10px 0 ${DEEP}` }}>
-            AUGUST की 5 DEADLINES
-          </span>
+      {/* Main content with spring animations */}
+      <AbsoluteFill style={{ transform: `scale(${camScale}) translateY(${camY}px)` }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 110,
+            top: 90,
+            opacity: sp(4),
+            transform: `translateX(${interpolate(sp(4), [0, 1], [-70, 0])}px)`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Bricolage Grotesque, Montserrat, sans-serif',
+              fontSize: 34,
+              letterSpacing: 8,
+              color: GOLD,
+              fontWeight: 700,
+            }}
+          >
+            TAUX D’ÉPARGNE DES MÉNAGES
+          </div>
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 116,
+              color: LIGHT,
+              lineHeight: 1,
+              marginTop: 6,
+            }}
+          >
+            CHAMPIONS SUR LE PAPIER
+          </div>
         </div>
 
-        {/* 5 deadline cards fan */}
-        {deadlines.map((d, i) => {
-          const delay = 70 + i * 22;
-          const rot = (i - 2) * 4;
+        {/* Bar chart graphic */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 130,
+            bottom: 210,
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 54,
+          }}
+        >
+          {BARS.map((b, i) => {
+            const grow = sp(50 + i * 20, { damping: 13 });
+            const h = interpolate(grow, [0, 1], [0, b.value * 26]);
+            const active = i === 2;
+            return (
+              <div key={b.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div
+                  style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 42,
+                    color: active ? GOLD : LIGHT,
+                    marginBottom: 14,
+                    opacity: grow,
+                  }}
+                >
+                  {b.value.toString().replace('.', ',')} %
+                </div>
+                <div
+                  style={{
+                    width: 130,
+                    height: h,
+                    backgroundColor: active ? GOLD : LIGHT,
+                    boxShadow: `12px 12px 0px ${INK}`,
+                    transform: `translateY(${Math.sin(frame * 0.05 + i) * 3}px)`,
+                  }}
+                />
+                <div
+                  style={{
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: 28,
+                    fontWeight: 600,
+                    color: LIGHT,
+                    opacity: 0.8,
+                    marginTop: 16,
+                  }}
+                >
+                  {b.label}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Torn-paper slash reveal — the brutal reality */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 90,
+            top: 300,
+            width: 720,
+            backgroundColor: LIGHT,
+            padding: '40px 46px',
+            clipPath: `polygon(0% 3%, 100% 0%, 98% 97%, 2% 100%)`,
+            transform: `rotate(-1.8deg) scale(${0.9 + revealSlash * 0.1})`,
+            opacity: revealSlash,
+            boxShadow: `20px 20px 0px ${INK}`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 74,
+              color: INK,
+              lineHeight: 1.02,
+            }}
+          >
+            MAIS CETTE ÉPARGNE EST ULTRA CONCENTRÉE
+          </div>
+        </div>
+
+        {/* Donut graphic — 65 ans et plus */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 240,
+            bottom: 170,
+            opacity: interpolate(frame, [300, 330], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+            transform: `scale(${0.94 + Math.sin(frame * 0.04) * 0.015})`,
+          }}
+        >
+          <svg width="320" height="320" viewBox="0 0 320 320">
+            <circle cx="160" cy="160" r={ringR} stroke={LIGHT} strokeWidth="34" fill="none" opacity="0.25" />
+            <circle
+              cx="160"
+              cy="160"
+              r={ringR}
+              stroke={GOLD}
+              strokeWidth="34"
+              fill="none"
+              strokeDasharray={`${ringC * twoThirds} ${ringC}`}
+              strokeLinecap="butt"
+              transform="rotate(-90 160 160)"
+            />
+            <text
+              x="160"
+              y="150"
+              textAnchor="middle"
+              fill={LIGHT}
+              fontFamily="Clash Display, Anton, sans-serif"
+              fontSize="66"
+            >
+              2/3
+            </text>
+            <text
+              x="160"
+              y="196"
+              textAnchor="middle"
+              fill={LIGHT}
+              fontFamily="Montserrat, sans-serif"
+              fontSize="26"
+              opacity="0.85"
+            >
+              65 ANS ET +
+            </text>
+          </svg>
+        </div>
+
+        <div
+          style={{
+            position: 'absolute',
+            left: 130,
+            bottom: 110,
+            fontFamily: 'Montserrat, Poppins, sans-serif',
+            fontSize: 40,
+            fontWeight: 500,
+            color: LIGHT,
+            opacity: interpolate(frame, [380, 420], [0, 0.9], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+          }}
+        >
+          Les jeunes actifs, eux, n’épargnent presque rien.
+        </div>
+      </AbsoluteFill>
+
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.58) 100%)',
+        }}
+      />
+
+      {/* Watermark */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+export default Scene12EpargneConcentree;
+```
+
+```tsx
+import React from 'react';
+
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
+
+export const compositionConfig = {
+  id: 'Scene13PrecariteSilencieuse',
+  durationInSeconds: 30,
+  fps: 30,
+  width: 1920,
+  height: 1080,
+};
+
+const seededRandom = (seed: number): number => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
+const GOLD = '#FFC107';
+
+const Scene13PrecariteSilencieuse: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  const sp = (delay: number, config?: object) =>
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
+
+  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  // Camera — slow orbit feel via rotation + scale
+  const camRot = Math.sin(frame * 0.006) * 1.1;
+  const camScale = interpolate(frame, [0, durationInFrames], [1.0, 1.07], { extrapolateRight: 'clamp' });
+
+  const dripHeight = interpolate(frame, [140, 420], [0, 520], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.quad),
+  });
+
+  const stampIn = sp(330, { damping: 9, stiffness: 90 });
+  const shake = frame > 330 && frame < 344 ? Math.sin(frame * 3.4) * 5 : 0;
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(circle at 75% 80%, #6A57C4 0%, ${BG} 42%, ${DEEP} 100%)`,
+        }}
+      />
+
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: '30%',
+            top: -260,
+            width: 760,
+            height: 760,
+            borderRadius: '50%',
+            border: `60px solid ${LIGHT}`,
+            opacity: 0.04,
+            transform: `scale(${1 + Math.sin(frame * 0.018) * 0.05})`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: -120,
+            bottom: -200,
+            width: 620,
+            height: 620,
+            backgroundColor: GOLD,
+            opacity: 0.05,
+            transform: `rotate(${25 + frame * 0.03}deg)`,
+          }}
+        />
+      </AbsoluteFill>
+
+      {/* Motion texture — diagonal grid */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `repeating-linear-gradient(45deg, ${LIGHT} 0px, ${LIGHT} 1.5px, transparent 1.5px, transparent 48px)`,
+          opacity: 0.07,
+          transform: `translate(${(frame * 0.3) % 48}px, ${(frame * 0.3) % 48}px)`,
+        }}
+      />
+
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 30 }).map((_, i) => {
+          const s = seededRandom(i + 21);
+          const s2 = seededRandom(i + 90);
           return (
-            <div key={d} style={{
-              position: 'absolute', top: 300, left: 140 + i * 330,
-              width: 290, height: 190, background: i % 2 ? PAPER : GOLD, color: INK,
-              boxShadow: `9px 9px 0 ${INK}`,
-              transform: `rotate(${rot + Math.sin(frame * 0.04 + i) * 1.2}deg) scale(${sp(delay)}) translateY(${Math.sin(frame * 0.05 + i * 2) * 4}px)`,
-              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 14,
-            }}>
-              <div style={{ fontFamily: 'JetBrains Mono', fontSize: 56, fontWeight: 700, background: INK, color: PAPER, width: 78, height: 78, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{i + 1}</div>
-              <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 800, fontSize: 32, textAlign: 'center', padding: '0 12px' }}>{d}</div>
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 + frame * (0.03 + s * 0.05)) % 110) - 5}%`,
+                width: 3 + s * 5,
+                height: 22 + s2 * 30,
+                backgroundColor: LIGHT,
+                opacity: 0.08 + s2 * 0.14,
+              }}
+            />
+          );
+        })}
+      </AbsoluteFill>
+
+      {/* Main content with spring animations */}
+      <AbsoluteFill
+        style={{
+          transform: `scale(${camScale}) rotate(${camRot}deg) translateX(${shake}px)`,
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            left: 120,
+            top: 150,
+            width: 1080,
+            opacity: sp(8),
+            transform: `translateY(${interpolate(sp(8), [0, 1], [70, 0])}px)`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Clash Display, Anton, sans-serif',
+              fontSize: 130,
+              lineHeight: 0.95,
+              color: LIGHT,
+              fontWeight: 700,
+            }}
+          >
+            PERSONNE N’A ACHETÉ
+          </div>
+          <div
+            style={{
+              display: 'inline-block',
+              marginTop: 12,
+              padding: '8px 24px',
+              backgroundColor: GOLD,
+              transform: `rotate(-1.4deg) scale(${sp(34)})`,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Clash Display, Anton, sans-serif',
+                fontSize: 130,
+                lineHeight: 1,
+                color: INK,
+                fontWeight: 700,
+              }}
+            >
+              SA PRÉCARITÉ
+            </span>
+          </div>
+        </div>
+
+        {/* Icon graphic — slow drip into an empty wallet */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 200,
+            top: 430,
+            opacity: sp(90),
+            transform: `scale(${sp(90)})`,
+          }}
+        >
+          <svg width="360" height="560" viewBox="0 0 360 560">
+            <line x1="180" y1="0" x2="180" y2="520" stroke={LIGHT} strokeWidth="3" opacity="0.28" />
+            <rect x="176" y="0" width="8" height={dripHeight} fill={GOLD} opacity="0.9" />
+            <circle cx="180" cy={dripHeight} r={9 + Math.sin(frame * 0.3) * 2} fill={GOLD} />
+            <rect x="46" y="400" width="268" height="150" rx="16" fill={LIGHT} />
+            <rect x="46" y="452" width="268" height="18" fill={INK} opacity="0.85" />
+            <circle cx="252" cy="482" r="20" fill={INK} opacity="0.85" />
+          </svg>
+        </div>
+
+        {/* Micro-touch cards — petites touches */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 130,
+            bottom: 210,
+            display: 'flex',
+            gap: 26,
+          }}
+        >
+          {['+ 1 CANAPÉ', '+ 1 VOITURE', '+ 3 ABONNEMENTS'].map((t, i) => {
+            const s = sp(170 + i * 26, { damping: 11 });
+            return (
+              <div
+                key={t}
+                style={{
+                  padding: '22px 34px',
+                  backgroundColor: i === 2 ? GOLD : LIGHT,
+                  color: INK,
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 32,
+                  fontWeight: 700,
+                  letterSpacing: 2,
+                  transform: `rotate(${i % 2 === 0 ? -2 : 2.4}deg) translateY(${interpolate(s, [0, 1], [60, 0]) + Math.sin(frame * 0.05 + i) * 4}px)`,
+                  opacity: s,
+                  boxShadow: `12px 12px 0px ${INK}`,
+                  clipPath: 'polygon(0% 5%, 100% 0%, 100% 94%, 1% 100%)',
+                }}
+              >
+                {t}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Stamp payoff */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 150,
+            bottom: 150,
+            padding: '18px 40px',
+            border: `8px solid ${LIGHT}`,
+            transform: `rotate(-8deg) scale(${interpolate(stampIn, [0, 1], [2.2, 1])})`,
+            opacity: stampIn,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 72,
+              color: LIGHT,
+              letterSpacing: 4,
+            }}
+          >
+            + 800 € / MOIS
+          </span>
+        </div>
+      </AbsoluteFill>
+
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)',
+        }}
+      />
+
+      {/* Watermark */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+export default Scene13PrecariteSilencieuse;
+```
+
+```tsx
+import React from 'react';
+
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
+
+export const compositionConfig = {
+  id: 'Scene14LifestyleCreep',
+  durationInSeconds: 30,
+  fps: 30,
+  width: 1920,
+  height: 1080,
+};
+
+const seededRandom = (seed: number): number => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
+const GOLD = '#FFC107';
+
+const Scene14LifestyleCreep: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  const sp = (delay: number, config?: object) =>
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
+
+  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  // Camera — lateral pan across the staircase
+  const camX = interpolate(frame, [0, durationInFrames], [90, -90], {
+    extrapolateRight: 'clamp',
+    easing: Easing.inOut(Easing.quad),
+  });
+  const camScale = interpolate(frame, [0, 90], [1.1, 1.02], { extrapolateRight: 'clamp' });
+
+  const steps = [
+    { label: 'CANAPÉ', cost: '+ 90 €' },
+    { label: 'VOITURE', cost: '+ 260 €' },
+    { label: 'ABOS', cost: '+ 210 €' },
+    { label: 'SORTIES', cost: '+ 240 €' },
+  ];
+
+  const totalIn = sp(300, { damping: 10 });
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(200deg, #6E5AD4 0%, ${BG} 46%, ${DEEP} 100%)`,
+        }}
+      />
+
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: 200 + Math.sin(frame * 0.011) * 50,
+            top: 60,
+            width: 560,
+            height: 560,
+            backgroundColor: LIGHT,
+            opacity: 0.05,
+            transform: `rotate(${frame * 0.05}deg)`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            right: 120,
+            bottom: 80,
+            width: 520,
+            height: 520,
+            borderRadius: '50%',
+            border: `4px dashed ${GOLD}`,
+            opacity: 0.08,
+            transform: `rotate(${-frame * 0.12}deg)`,
+          }}
+        />
+      </AbsoluteFill>
+
+      {/* Motion texture — horizontal rulers */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `repeating-linear-gradient(0deg, ${LIGHT} 0px, ${LIGHT} 2px, transparent 2px, transparent 90px)`,
+          opacity: 0.05,
+          transform: `translateY(${(frame * 0.5) % 90}px)`,
+        }}
+      />
+
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 22 }).map((_, i) => {
+          const s = seededRandom(i + 55);
+          const s2 = seededRandom(i + 130);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 - frame * 0.06) % 110 + 110) % 110}%`,
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: GOLD,
+                opacity: 0.12 + s * 0.3,
+              }}
+            />
+          );
+        })}
+      </AbsoluteFill>
+
+      {/* Main content with spring animations */}
+      <AbsoluteFill style={{ transform: `scale(${camScale}) translateX(${camX}px)` }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 120,
+            top: 100,
+            opacity: sp(6),
+            transform: `translateY(${interpolate(sp(6), [0, 1], [-60, 0])}px)`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 112,
+              color: LIGHT,
+              lineHeight: 0.98,
+            }}
+          >
+            LA DILATATION INVISIBLE
+          </div>
+          <div
+            style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 34,
+              letterSpacing: 8,
+              color: GOLD,
+              marginTop: 10,
+            }}
+          >
+            LIFESTYLE CREEP · MOIS APRÈS MOIS
+          </div>
+        </div>
+
+        {/* Staircase of costs — animated cards */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 180,
+            bottom: 190,
+            display: 'flex',
+            alignItems: 'flex-end',
+            gap: 30,
+          }}
+        >
+          {steps.map((st, i) => {
+            const s = sp(70 + i * 30, { damping: 13, stiffness: 110 });
+            const h = 140 + i * 96;
+            return (
+              <div
+                key={st.label}
+                style={{
+                  width: 250,
+                  height: interpolate(s, [0, 1], [0, h]),
+                  backgroundColor: i === 3 ? GOLD : LIGHT,
+                  boxShadow: `14px 14px 0px ${INK}`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  padding: 22,
+                  transform: `translateY(${Math.sin(frame * 0.05 + i * 1.2) * 4}px) rotate(${i % 2 === 0 ? -0.8 : 0.9}deg)`,
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'Anton, sans-serif',
+                    fontSize: 40,
+                    color: INK,
+                    letterSpacing: 1,
+                  }}
+                >
+                  {st.label}
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'Space Mono, monospace',
+                    fontSize: 34,
+                    color: INK,
+                    opacity: 0.72,
+                    marginTop: 6,
+                  }}
+                >
+                  {st.cost}
+                </div>
+                <svg width="120" height="120" viewBox="0 0 120 120" style={{ marginTop: 'auto' }}>
+                  {i === 0 && (
+                    <g fill={INK} opacity="0.85">
+                      <rect x="10" y="52" width="100" height="34" rx="8" />
+                      <rect x="4" y="44" width="26" height="34" rx="8" />
+                      <rect x="90" y="44" width="26" height="34" rx="8" />
+                    </g>
+                  )}
+                  {i === 1 && (
+                    <g fill={INK} opacity="0.85">
+                      <rect x="8" y="52" width="104" height="30" rx="10" />
+                      <path d="M26 52 L38 32 L84 32 L96 52 Z" />
+                      <circle cx="34" cy="88" r="12" />
+                      <circle cx="88" cy="88" r="12" />
+                    </g>
+                  )}
+                  {i === 2 && (
+                    <g fill={INK} opacity="0.85">
+                      <rect x="12" y="26" width="96" height="26" rx="6" />
+                      <rect x="12" y="60" width="96" height="26" rx="6" />
+                      <rect
+                        x="12"
+                        y="94"
+                        width={40 + Math.sin(frame * 0.1) * 20}
+                        height="16"
+                        rx="6"
+                      />
+                    </g>
+                  )}
+                  {i === 3 && (
+                    <g fill={INK} opacity="0.85">
+                      <circle cx="60" cy="60" r="40" />
+                      <rect x="54" y="30" width="12" height="34" fill={GOLD} />
+                      <rect x="54" y="58" width="30" height="12" fill={GOLD} />
+                    </g>
+                  )}
+                </svg>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Payoff total card */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 130,
+            top: 380,
+            padding: '34px 50px',
+            backgroundColor: INK,
+            transform: `rotate(2.2deg) scale(${totalIn})`,
+            opacity: totalIn,
+            border: `6px solid ${LIGHT}`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Montserrat, sans-serif',
+              fontSize: 32,
+              fontWeight: 600,
+              color: LILAC,
+              letterSpacing: 4,
+            }}
+          >
+            EN 3 ANS, LE BUDGET A GONFLÉ DE
+          </div>
+          <div
+            style={{
+              fontFamily: 'Clash Display, Anton, sans-serif',
+              fontSize: 160,
+              lineHeight: 1,
+              color: GOLD,
+              fontWeight: 700,
+            }}
+          >
+            800 €
+          </div>
+          <div
+            style={{
+              fontFamily: 'Montserrat, sans-serif',
+              fontSize: 34,
+              color: LIGHT,
+              opacity: 0.85,
+            }}
+          >
+            sans qu’on s’en rende compte
+          </div>
+        </div>
+      </AbsoluteFill>
+
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(ellipse at 50% 55%, rgba(0,0,0,0) 44%, rgba(0,0,0,0.56) 100%)',
+        }}
+      />
+
+      {/* Watermark */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+export default Scene14LifestyleCreep;
+```
+
+```tsx
+import React from 'react';
+
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
+
+export const compositionConfig = {
+  id: 'Scene15CoutParUsage',
+  durationInSeconds: 30,
+  fps: 30,
+  width: 1920,
+  height: 1080,
+};
+
+const seededRandom = (seed: number): number => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
+const GOLD = '#FFC107';
+
+const Scene15CoutParUsage: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  const sp = (delay: number, config?: object) =>
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
+
+  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  // Camera — zoom out from the formula
+  const camScale = interpolate(frame, [0, 200], [1.22, 1.0], {
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
+  const camY = Math.sin(frame * 0.01) * 14;
+
+  const numIn = sp(20);
+  const divIn = sp(60);
+  const denIn = sp(95);
+  const resIn = sp(160, { damping: 10 });
+  const blink = Math.sin(frame * 0.25) > 0 ? 1 : 0.35;
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(circle at 50% 40%, #7160D8 0%, ${BG} 48%, ${DEEP} 100%)`,
+        }}
+      />
+
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: 1200,
+            height: 1200,
+            marginLeft: -600,
+            marginTop: -600,
+            borderRadius: '50%',
+            border: `2px solid ${LIGHT}`,
+            opacity: 0.05,
+            transform: `scale(${0.7 + Math.sin(frame * 0.02) * 0.06})`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: 80,
+            bottom: 60,
+            width: 460,
+            height: 460,
+            backgroundColor: GOLD,
+            opacity: 0.05,
+            transform: `rotate(${frame * 0.07}deg)`,
+          }}
+        />
+      </AbsoluteFill>
+
+      {/* Motion texture — engineering grid */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `linear-gradient(${LIGHT} 1px, transparent 1px), linear-gradient(90deg, ${LIGHT} 1px, transparent 1px)`,
+          backgroundSize: '72px 72px',
+          opacity: 0.06,
+          transform: `translate(${(frame * 0.25) % 72}px, ${(frame * 0.25) % 72}px)`,
+        }}
+      />
+
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 26 }).map((_, i) => {
+          const s = seededRandom(i + 200);
+          const s2 = seededRandom(i + 320);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 + frame * 0.05) % 110) - 5}%`,
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 20 + s * 16,
+                color: LIGHT,
+                opacity: 0.1 + s2 * 0.16,
+                transform: `rotate(${s * 40 - 20}deg)`,
+              }}
+            >
+              {i % 2 === 0 ? '€' : '÷'}
             </div>
           );
         })}
-
-        {/* Persona icon chips */}
-        {personas.map((p, i) => (
-          <div key={p.label} style={{
-            position: 'absolute', bottom: 330, left: 250 + i * 370,
-            transform: `translateY(${interpolate(sp(280 + i * 18), [0, 1], [200, 0])}px) rotate(${i % 2 ? 2 : -2}deg)`,
-            background: INK, color: PAPER, padding: '16px 28px', display: 'flex', alignItems: 'center', gap: 16,
-            fontFamily: 'Inter, Poppins', fontWeight: 700, fontSize: 30, boxShadow: `7px 7px 0 ${DEEP}`,
-          }}>
-            <svg width="44" height="44" viewBox="0 0 24 24"><path d={p.icon} fill="none" stroke={GOLD} strokeWidth="1.8" strokeLinecap="round" /></svg>
-            {p.label}
-          </div>
-        ))}
-
-        {/* 90% ignore — giant stat */}
-        <div style={{ position: 'absolute', bottom: 70, left: 0, right: 0, textAlign: 'center', opacity: ninetyOp }}>
-          <span style={{ fontFamily: 'Yantra One', fontSize: 150, color: PAPER, textShadow: `10px 10px 0 ${INK}` }}>{pct}%</span>
-          <span style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 52, color: INK, marginLeft: 30 }}>
-            लोग इन्हें IGNORE करते हैं
-          </span>
-        </div>
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
-
-      {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-export default Scene02_FiveDeadlines;
-```
-
-```tsx
-import React from 'react';
-
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
-
-export const compositionConfig = {
-  id: 'Scene03_Aug31Deadline',
-  durationInSeconds: 29.454,
-  fps: 30,
-  width: 1920,
-  height: 1080,
-};
-
-const seededRandom = (seed: number): number => {
-  const x = Math.sin(seed * 9999) * 10000;
-  return x - Math.floor(x);
-};
-
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
-const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
-
-const Scene03_Aug31Deadline: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
-
-  const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
-
-  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-  });
-
-  // Camera: slow tilt-zoom
-  const camZoom = interpolate(frame, [0, durationInFrames], [1.06, 1], { easing: Easing.inOut(Easing.quad) });
-  const camRot = interpolate(frame, [0, durationInFrames], [0.8, -0.8]);
-
-  // Stamp slam beat
-  const stampF = 420;
-  const stampS = interpolate(sp(stampF, { stiffness: 220, damping: 11 }), [0, 1], [3, 1]);
-  const shake = frame >= stampF && frame < stampF + 14 ? Math.sin(frame * 3.5) * interpolate(frame, [stampF, stampF + 14], [10, 0]) : 0;
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
-
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `radial-gradient(100% 120% at 80% 20%, ${BG} 40%, ${DEEP} 100%)` }} />
-
-      {/* Punk collage: newsprint blocks + starburst */}
-      <div style={{ position: 'absolute', top: -80, right: -60, width: 520, height: 620, background: PAPER, opacity: 0.06, transform: `rotate(${7 + Math.sin(frame * 0.02) * 1.5}deg)` }} />
-      <div style={{ position: 'absolute', bottom: -120, left: -80, width: 560, height: 420, background: INK, opacity: 0.09, transform: 'rotate(-5deg)' }} />
-      <svg width="260" height="260" viewBox="0 0 100 100" style={{ position: 'absolute', top: 90, left: 90, opacity: 0.16, transform: `rotate(${frame * 0.25}deg)` }}>
-        <polygon points="50,0 60,35 95,25 68,50 95,75 60,65 50,100 40,65 5,75 32,50 5,25 40,35" fill={GOLD} />
-      </svg>
-
-      {/* Diagonal line texture */}
-      <AbsoluteFill style={{ backgroundImage: `repeating-linear-gradient(45deg, ${INK} 0 2px, transparent 2px 46px)`, opacity: 0.05 }} />
-
-      {/* Particles */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 11) * 1920,
-          top: (seededRandom(i + 33) * 1080 + frame * (0.2 + seededRandom(i + 2) * 0.35)) % 1080,
-          width: 6, height: 6, background: i % 2 ? PAPER : GOLD, opacity: 0.26,
-          transform: `rotate(${frame * 2 + i * 40}deg)`,
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `scale(${camZoom}) rotate(${camRot}deg) translateX(${shake}px)` }}>
-
-        {/* Kicker */}
-        <div style={{
-          position: 'absolute', top: 100, left: 0, right: 0, textAlign: 'center',
-          opacity: interpolate(frame, [5, 30], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-        }}>
-          <span style={{ background: PAPER, color: INK, padding: '12px 34px', fontFamily: 'Inter, Poppins', fontWeight: 800, fontSize: 40, letterSpacing: 6, transform: 'rotate(-1deg)', display: 'inline-block', boxShadow: `7px 7px 0 ${INK}` }}>
-            SABSE BADI DEADLINE
+      {/* Main content with spring animations */}
+      <AbsoluteFill style={{ transform: `scale(${camScale}) translateY(${camY}px)` }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: 90,
+            left: 0,
+            width: '100%',
+            textAlign: 'center',
+            opacity: sp(2),
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '12px 40px',
+              backgroundColor: LIGHT,
+              color: INK,
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 32,
+              letterSpacing: 8,
+              fontWeight: 700,
+              transform: 'rotate(-1.2deg)',
+            }}
+          >
+            PRINCIPE N°01
           </span>
         </div>
 
-        {/* Giant calendar card */}
-        <div style={{
-          position: 'absolute', top: 220, left: 560, width: 800, height: 560,
-          transform: `scale(${sp(50)}) rotate(${-2 + Math.sin(frame * 0.03) * 0.8}deg)`,
-          background: PAPER, boxShadow: `16px 16px 0 ${INK}`,
-        }}>
-          <div style={{ height: 120, background: INK, color: PAPER, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Yantra One', fontSize: 64, letterSpacing: 10 }}>
-            AUGUST 2026
+        {/* Formula row */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 300,
+            left: 0,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 40,
+          }}
+        >
+          <div
+            style={{
+              padding: '30px 44px',
+              backgroundColor: LIGHT,
+              boxShadow: `14px 14px 0px ${INK}`,
+              transform: `translateY(${interpolate(numIn, [0, 1], [80, 0])}px) rotate(-1.6deg)`,
+              opacity: numIn,
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 28, color: INK, opacity: 0.65 }}>
+              PRIX PAYÉ
+            </div>
+            <div style={{ fontFamily: 'Clash Display, Anton, sans-serif', fontSize: 110, color: INK, fontWeight: 700 }}>
+              799 €
+            </div>
           </div>
-          <div style={{ textAlign: 'center', fontFamily: 'Yantra One', fontSize: 300, color: INK, lineHeight: 1.05 }}>31</div>
-          {/* Red circle draw-on around the 31 */}
-          <svg width="380" height="360" viewBox="0 0 380 360" style={{ position: 'absolute', top: 130, left: 210 }}>
-            <ellipse cx="190" cy="180" rx="165" ry="150" fill="none" stroke="#ff0000" strokeWidth="10"
-              strokeDasharray={1000}
-              strokeDashoffset={interpolate(frame, [200, 260], [1000, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })} />
+
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 120,
+              color: GOLD,
+              transform: `scale(${divIn}) rotate(${Math.sin(frame * 0.08) * 4}deg)`,
+              opacity: divIn,
+            }}
+          >
+            ÷
+          </div>
+
+          <div
+            style={{
+              padding: '30px 44px',
+              backgroundColor: GOLD,
+              boxShadow: `14px 14px 0px ${INK}`,
+              transform: `translateY(${interpolate(denIn, [0, 1], [80, 0])}px) rotate(1.8deg)`,
+              opacity: denIn,
+              textAlign: 'center',
+            }}
+          >
+            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 28, color: INK, opacity: 0.7 }}>
+              USAGES RÉELS / AN
+            </div>
+            <div style={{ fontFamily: 'Clash Display, Anton, sans-serif', fontSize: 110, color: INK, fontWeight: 700 }}>
+              24
+            </div>
+          </div>
+        </div>
+
+        {/* Result — robot cuiseur */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 610,
+            left: 0,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 44,
+            opacity: resIn,
+            transform: `scale(${interpolate(resIn, [0, 1], [0.72, 1])})`,
+          }}
+        >
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <rect x="30" y="60" width="120" height="96" rx="14" fill={LIGHT} />
+            <rect x="46" y="20" width="88" height="42" rx="10" fill={LIGHT} opacity="0.85" />
+            <circle cx="90" cy="108" r={26 + Math.sin(frame * 0.2) * 2} fill={INK} opacity="0.8" />
+            <rect x="120" y="88" width="18" height="18" rx="4" fill={GOLD} opacity={blink} />
           </svg>
+          <div>
+            <div
+              style={{
+                fontFamily: 'Anton, sans-serif',
+                fontSize: 150,
+                color: LIGHT,
+                lineHeight: 1,
+              }}
+            >
+              33 € / USAGE
+            </div>
+            <div
+              style={{
+                fontFamily: 'Montserrat, Poppins, sans-serif',
+                fontSize: 42,
+                fontWeight: 500,
+                color: LILAC,
+              }}
+            >
+              soit trois fois le menu du restaurant du coin
+            </div>
+          </div>
         </div>
 
-        {/* ITR-3 / ITR-4 sticker tags */}
-        <div style={{
-          position: 'absolute', top: 300, left: 170,
-          transform: `rotate(-6deg) translateX(${interpolate(sp(150), [0, 1], [-500, 0])}px)`,
-          background: GOLD, color: INK, padding: '20px 38px', fontFamily: 'JetBrains Mono', fontSize: 58, fontWeight: 700, boxShadow: `9px 9px 0 ${INK}`,
-        }}>ITR-3</div>
-        <div style={{
-          position: 'absolute', top: 470, left: 200,
-          transform: `rotate(4deg) translateX(${interpolate(sp(185), [0, 1], [-560, 0])}px)`,
-          background: INK, color: GOLD, padding: '20px 38px', fontFamily: 'JetBrains Mono', fontSize: 58, fontWeight: 700, boxShadow: `9px 9px 0 ${DEEP}`,
-        }}>ITR-4</div>
-
-        {/* NO TAX AUDIT rubber stamp */}
-        <div style={{
-          position: 'absolute', top: 380, right: 130, opacity: frame >= stampF ? 0.92 : 0,
-          transform: `rotate(-14deg) scale(${stampS})`,
-          border: '9px solid #ff0000', color: '#ff0000', padding: '18px 30px',
-          fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 54, letterSpacing: 3, background: 'rgba(238,245,255,0.9)',
-        }}>
-          NO TAX AUDIT<br />WALE TAXPAYERS
-        </div>
-
-        {/* Bottom line */}
-        <div style={{
-          position: 'absolute', bottom: 90, left: 0, right: 0, textAlign: 'center',
-          transform: `translateY(${interpolate(sp(560), [0, 1], [120, 0])}px)`,
-          fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 56, color: PAPER, textShadow: `5px 5px 0 ${INK}`,
-        }}>
-          August ख़त्म होने से पहले — File करना अनिवार्य
-        </div>
+        {/* Collage tape corner */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 70,
+            top: 250,
+            width: 300,
+            height: 54,
+            backgroundColor: LIGHT,
+            opacity: 0.25,
+            transform: 'rotate(-42deg)',
+          }}
+        />
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6) 100%)',
+        }}
+      />
 
       {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
       </div>
     </AbsoluteFill>
   );
 };
 
-export default Scene03_Aug31Deadline;
+export default Scene15CoutParUsage;
 ```
 
 ```tsx
 import React from 'react';
 
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
 
 export const compositionConfig = {
-  id: 'Scene04_WhoFiles',
-  durationInSeconds: 29.454,
+  id: 'Scene16DuelDesVestes',
+  durationInSeconds: 30,
   fps: 30,
   width: 1920,
   height: 1080,
@@ -459,135 +1697,593 @@ const seededRandom = (seed: number): number => {
   return x - Math.floor(x);
 };
 
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
 const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
 
-const Scene04_WhoFiles: React.FC = () => {
+const Jacket: React.FC<{ fill: string; accent: string }> = ({ fill, accent }) => (
+  <svg width="230" height="250" viewBox="0 0 230 250">
+    <path d="M60 30 L115 60 L170 30 L215 70 L190 110 L180 100 L180 230 L50 230 L50 100 L40 110 L15 70 Z" fill={fill} />
+    <path d="M115 60 L115 230" stroke={accent} strokeWidth="6" />
+    <circle cx="115" cy="120" r="7" fill={accent} />
+    <circle cx="115" cy="160" r="7" fill={accent} />
+    <circle cx="115" cy="200" r="7" fill={accent} />
+  </svg>
+);
+
+const Scene16DuelDesVestes: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
   const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
 
   const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
   });
 
-  // Camera: gentle zoom-out reveal
-  const camZoom = interpolate(frame, [0, durationInFrames], [1.12, 1], { easing: Easing.out(Easing.quad) });
+  // Camera — subtle tilt then settle
+  const camRot = interpolate(frame, [0, 120], [-1.6, 0], {
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
+  const camScale = interpolate(frame, [0, durationInFrames], [1.03, 1.09], { extrapolateRight: 'clamp' });
 
-  const personas = [
-    { title: 'FREELANCE DESIGNER', hindi: 'ग्राफ़िक वाला दोस्त', icon: <path d="M4 18 L14 8 l3 3 L7 21 H4 z M13 9 l3 -3 3 3 -3 3" fill="none" stroke={INK} strokeWidth="1.8" strokeLinejoin="round" /> },
-    { title: 'KIRANA STORE', hindi: 'मोहल्ले का किराना', icon: <path d="M4 9 h16 l-1.5 -4 h-13 z M5 9 v11 h14 V9 M9 20 v-6 h6 v6" fill="none" stroke={INK} strokeWidth="1.8" strokeLinejoin="round" /> },
-    { title: 'PRACTICING CA', hindi: 'अपनी practice वाला CA', icon: <path d="M6 4 h12 v16 H6 z M9 8 h6 M9 12 h6 M9 16 h4" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" /> },
-    { title: 'ONLINE TUTOR', hindi: 'घर बैठे tuition teacher', icon: <path d="M3 6 h18 v11 H3 z M9 21 h6 M12 17 v4 M7 10 l3 2 -3 2" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> },
-  ];
+  const leftIn = sp(16, { damping: 13 });
+  const rightIn = sp(46, { damping: 13 });
+  const verdictIn = sp(230, { damping: 9 });
+  const impact = frame > 230 && frame < 246 ? Math.sin(frame * 3.1) * 6 : 0;
 
-  const sections = ['44AD', '44ADA', '44AE'];
+  const barLeft = interpolate(sp(120), [0, 1], [0, 40]);
+  const barRight = interpolate(sp(150), [0, 1], [0, 420]);
 
   return (
     <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(90deg, ${DEEP} 0%, ${BG} 50%, #6E5AD4 100%)`,
+        }}
+      />
 
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `linear-gradient(180deg, ${DEEP} 0%, ${BG} 35%, ${BG} 100%)` }} />
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: -100,
+            width: 6,
+            height: 1300,
+            marginLeft: -3,
+            backgroundColor: LIGHT,
+            opacity: 0.12,
+            transform: `rotate(${1.5 + Math.sin(frame * 0.02) * 1}deg)`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: 60,
+            top: 120,
+            width: 520,
+            height: 520,
+            borderRadius: '50%',
+            backgroundColor: LIGHT,
+            opacity: 0.04,
+            transform: `scale(${1 + Math.sin(frame * 0.03) * 0.05})`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            right: 60,
+            bottom: 80,
+            width: 480,
+            height: 480,
+            backgroundColor: GOLD,
+            opacity: 0.05,
+            transform: `rotate(${-frame * 0.05}deg)`,
+          }}
+        />
+      </AbsoluteFill>
 
-      {/* Collage: ripped poster corners */}
-      <div style={{ position: 'absolute', top: -60, left: 640, width: 640, height: 200, background: INK, opacity: 0.10, transform: 'rotate(-3deg)' }} />
-      <div style={{ position: 'absolute', bottom: -80, right: -60, width: 500, height: 320, background: PAPER, opacity: 0.06, transform: `rotate(${5 + Math.cos(frame * 0.02) * 1.5}deg)` }} />
-      <div style={{ position: 'absolute', top: 420, left: -110, width: 300, height: 300, background: GOLD, opacity: 0.10, transform: `rotate(${45 + frame * 0.1}deg)` }} />
+      {/* Motion texture — concentric circles */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `repeating-radial-gradient(circle at 50% 50%, ${LIGHT} 0px, ${LIGHT} 1.5px, transparent 1.5px, transparent 70px)`,
+          opacity: 0.05,
+          transform: `scale(${1 + Math.sin(frame * 0.02) * 0.03})`,
+        }}
+      />
 
-      {/* Circle texture */}
-      <AbsoluteFill style={{ backgroundImage: `radial-gradient(circle, transparent 62%, rgba(25,25,25,0.05) 63%)`, backgroundSize: '160px 160px', opacity: 0.9 }} />
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 24 }).map((_, i) => {
+          const s = seededRandom(i + 400);
+          const s2 = seededRandom(i + 500);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 - frame * 0.05) % 110 + 110) % 110}%`,
+                width: 5 + s * 7,
+                height: 5 + s * 7,
+                backgroundColor: i % 2 === 0 ? LILAC : LIGHT,
+                borderRadius: '50%',
+                opacity: 0.15 + s2 * 0.25,
+              }}
+            />
+          );
+        })}
+      </AbsoluteFill>
 
-      {/* Particles */}
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 5) * 1920,
-          top: (seededRandom(i + 17) * 1080 - frame * (0.2 + seededRandom(i) * 0.3) + 1080) % 1080,
-          width: 7, height: 7, background: i % 3 ? PAPER : GOLD, opacity: 0.24, transform: 'rotate(45deg)',
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `scale(${camZoom})` }}>
-
-        {/* Headline */}
-        <div style={{
-          position: 'absolute', top: 70, left: 0, right: 0, textAlign: 'center',
-          transform: `scale(${sp(5)}) rotate(-1deg)`,
-        }}>
-          <span style={{ background: INK, color: PAPER, padding: '16px 44px', fontFamily: 'Yantra One', fontSize: 84, boxShadow: `10px 10px 0 ${DEEP}` }}>
-            ये DEADLINE किसके लिए?
-          </span>
+      {/* Main content with spring animations */}
+      <AbsoluteFill
+        style={{ transform: `scale(${camScale}) rotate(${camRot}deg) translateX(${impact}px)` }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            top: 70,
+            left: 0,
+            width: '100%',
+            textAlign: 'center',
+            fontFamily: 'Anton, sans-serif',
+            fontSize: 96,
+            color: LIGHT,
+            opacity: sp(4),
+          }}
+        >
+          LAQUELLE EST LA PLUS CHÈRE ?
         </div>
 
-        {/* 2x2 persona collage cards */}
-        {personas.map((p, i) => {
-          const col = i % 2, row = Math.floor(i / 2);
-          const delay = 70 + i * 24;
+        {/* Left card — 400 € */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 190,
+            top: 250,
+            width: 620,
+            padding: 36,
+            backgroundColor: LIGHT,
+            boxShadow: `18px 18px 0px ${INK}`,
+            transform: `translateX(${interpolate(leftIn, [0, 1], [-220, 0])}px) rotate(-1.5deg)`,
+            opacity: leftIn,
+            clipPath: 'polygon(0% 2%, 100% 0%, 99% 98%, 1% 100%)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
+            <div style={{ transform: `translateY(${Math.sin(frame * 0.05) * 5}px)` }}>
+              <Jacket fill={INK} accent={GOLD} />
+            </div>
+            <div>
+              <div style={{ fontFamily: 'Anton, sans-serif', fontSize: 84, color: INK, lineHeight: 1 }}>400 €</div>
+              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 30, color: INK, opacity: 0.7 }}>
+                200 PORTS
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: 20, height: 34, backgroundColor: '#E3DDF7' }}>
+            <div style={{ width: barLeft, height: 34, backgroundColor: INK }} />
+          </div>
+          <div style={{ fontFamily: 'Clash Display, Anton, sans-serif', fontSize: 96, color: INK, fontWeight: 700 }}>
+            2 € / PORT
+          </div>
+        </div>
+
+        {/* Right card — 150 € */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 190,
+            top: 250,
+            width: 620,
+            padding: 36,
+            backgroundColor: GOLD,
+            boxShadow: `18px 18px 0px ${INK}`,
+            transform: `translateX(${interpolate(rightIn, [0, 1], [220, 0])}px) rotate(1.7deg)`,
+            opacity: rightIn,
+            clipPath: 'polygon(0% 0%, 100% 2%, 99% 100%, 1% 98%)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
+            <div style={{ transform: `translateY(${Math.sin(frame * 0.05 + 1.5) * 5}px)` }}>
+              <Jacket fill={INK} accent={LIGHT} />
+            </div>
+            <div>
+              <div style={{ fontFamily: 'Anton, sans-serif', fontSize: 84, color: INK, lineHeight: 1 }}>150 €</div>
+              <div style={{ fontFamily: 'Space Mono, monospace', fontSize: 30, color: INK, opacity: 0.75 }}>
+                3 PORTS
+              </div>
+            </div>
+          </div>
+          <div style={{ marginTop: 20, height: 34, backgroundColor: '#F0DFA0' }}>
+            <div style={{ width: barRight, height: 34, backgroundColor: INK }} />
+          </div>
+          <div style={{ fontFamily: 'Clash Display, Anton, sans-serif', fontSize: 96, color: INK, fontWeight: 700 }}>
+            50 € / PORT
+          </div>
+        </div>
+
+        {/* Verdict band */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: 150,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            opacity: verdictIn,
+            transform: `scale(${interpolate(verdictIn, [0, 1], [0.8, 1])})`,
+          }}
+        >
+          <div
+            style={{
+              padding: '24px 60px',
+              backgroundColor: INK,
+              border: `6px solid ${LIGHT}`,
+              transform: 'rotate(-1.2deg)',
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 78,
+              color: LIGHT,
+              letterSpacing: 2,
+            }}
+          >
+            LA MOINS CHÈRE COÛTE 25 FOIS PLUS
+          </div>
+        </div>
+      </AbsoluteFill>
+
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 45%, rgba(0,0,0,0.55) 100%)',
+        }}
+      />
+
+      {/* Watermark */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
+      </div>
+    </AbsoluteFill>
+  );
+};
+
+export default Scene16DuelDesVestes;
+```
+
+```tsx
+import React from 'react';
+
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
+
+export const compositionConfig = {
+  id: 'Scene17FiltreHonnetete',
+  durationInSeconds: 30,
+  fps: 30,
+  width: 1920,
+  height: 1080,
+};
+
+const seededRandom = (seed: number): number => {
+  const x = Math.sin(seed * 9999) * 10000;
+  return x - Math.floor(x);
+};
+
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
+const GOLD = '#FFC107';
+
+const Scene17FiltreHonnetete: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  const sp = (delay: number, config?: object) =>
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
+
+  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  // Camera — slow orbit
+  const camScale = interpolate(frame, [0, durationInFrames], [1.12, 1.0], { extrapolateRight: 'clamp' });
+  const camX = Math.cos(frame * 0.009) * 26;
+  const camY = Math.sin(frame * 0.009) * 16;
+
+  const pct = interpolate(frame, [120, 300], [0, 70], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
+  const ringR = 190;
+  const ringC = 2 * Math.PI * ringR;
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(circle at 68% 50%, #7563DD 0%, ${BG} 44%, ${DEEP} 100%)`,
+        }}
+      />
+
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: -140,
+            top: 60,
+            width: 700,
+            height: 700,
+            border: `70px solid ${LIGHT}`,
+            opacity: 0.04,
+            transform: `rotate(${frame * 0.04}deg)`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            right: 300,
+            bottom: -180,
+            width: 0,
+            height: 0,
+            borderLeft: '300px solid transparent',
+            borderRight: '300px solid transparent',
+            borderBottom: `500px solid ${GOLD}`,
+            opacity: 0.05,
+            transform: `rotate(${190 + Math.sin(frame * 0.015) * 8}deg)`,
+          }}
+        />
+      </AbsoluteFill>
+
+      {/* Motion texture — chevron lines */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `repeating-linear-gradient(-45deg, ${LIGHT} 0px, ${LIGHT} 2px, transparent 2px, transparent 56px)`,
+          opacity: 0.05,
+          transform: `translateX(${-(frame * 0.6) % 56}px)`,
+        }}
+      />
+
+      {/* Floating particles — falling impulse tags */}
+      <AbsoluteFill>
+        {Array.from({ length: 18 }).map((_, i) => {
+          const s = seededRandom(i + 610);
+          const s2 = seededRandom(i + 720);
+          const fall = ((s2 * 120 + frame * (0.22 + s * 0.2)) % 130) - 15;
           return (
-            <div key={p.title} style={{
-              position: 'absolute', left: 330 + col * 660, top: 250 + row * 300, width: 600, height: 260,
-              background: i % 2 ? GOLD : PAPER,
-              transform: `rotate(${i % 2 ? 1.6 : -1.6}deg) scale(${sp(delay)}) translateY(${Math.sin(frame * 0.045 + i * 1.7) * 5}px)`,
-              boxShadow: `11px 11px 0 ${INK}`, display: 'flex', alignItems: 'center', gap: 30, padding: '0 40px',
-            }}>
-              <div style={{ width: 130, height: 130, background: 'rgba(25,25,25,0.06)', border: `4px solid ${INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `rotate(${Math.sin(frame * 0.06 + i) * 4}deg)` }}>
-                <svg width="90" height="90" viewBox="0 0 24 24">{p.icon}</svg>
-              </div>
-              <div>
-                <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 40, color: INK }}>{p.title}</div>
-                <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 34, color: DEEP, marginTop: 8 }}>{p.hindi}</div>
-              </div>
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${6 + s * 40}%`,
+                top: `${fall}%`,
+                padding: '8px 16px',
+                backgroundColor: LIGHT,
+                opacity: 0.22,
+                fontFamily: 'Space Mono, monospace',
+                fontSize: 24,
+                color: INK,
+                transform: `rotate(${s * 60 - 30}deg)`,
+              }}
+            >
+              ACHAT IMPULSIF
             </div>
           );
         })}
+      </AbsoluteFill>
 
-        {/* Presumptive section chips — punch in one by one */}
-        <div style={{ position: 'absolute', bottom: 80, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 40 }}>
-          <div style={{
-            fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 44, color: PAPER, textShadow: `4px 4px 0 ${INK}`, alignSelf: 'center',
-            opacity: interpolate(frame, [440, 465], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-          }}>
-            Presumptive Scheme:
+      {/* Main content with spring animations */}
+      <AbsoluteFill style={{ transform: `scale(${camScale}) translate(${camX}px, ${camY}px)` }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 110,
+            top: 120,
+            width: 760,
+            opacity: sp(8),
+            transform: `translateX(${interpolate(sp(8), [0, 1], [-90, 0])}px)`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Bricolage Grotesque, Montserrat, sans-serif',
+              fontSize: 36,
+              letterSpacing: 6,
+              color: GOLD,
+              fontWeight: 700,
+            }}
+          >
+            LE FILTRE
           </div>
-          {sections.map((s, i) => (
-            <div key={s} style={{
-              background: INK, color: GOLD, padding: '14px 34px', fontFamily: 'JetBrains Mono', fontWeight: 700, fontSize: 48,
-              boxShadow: `7px 7px 0 ${DEEP}`,
-              transform: `scale(${sp(470 + i * 20, { stiffness: 200 })}) rotate(${(i - 1) * 2.5}deg)`,
-            }}>{s}</div>
-          ))}
+          <div
+            style={{
+              fontFamily: 'Clash Display, Anton, sans-serif',
+              fontSize: 118,
+              lineHeight: 0.96,
+              color: LIGHT,
+              fontWeight: 700,
+              marginTop: 8,
+            }}
+          >
+            UNE RÈGLE QUI T’OBLIGE À ÊTRE HONNÊTE
+          </div>
+        </div>
+
+        {/* Funnel graphic */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 190,
+            bottom: 170,
+            opacity: sp(70),
+            transform: `scale(${sp(70)})`,
+          }}
+        >
+          <svg width="460" height="420" viewBox="0 0 460 420">
+            <path d="M20 20 L440 20 L280 210 L280 380 L180 340 L180 210 Z" fill={LIGHT} opacity="0.9" />
+            <path
+              d="M20 20 L440 20 L280 210 L280 380 L180 340 L180 210 Z"
+              fill="none"
+              stroke={INK}
+              strokeWidth="8"
+            />
+            <circle cx="230" cy={120 + Math.sin(frame * 0.12) * 26} r="18" fill={GOLD} />
+            <circle cx="230" cy={300 + Math.sin(frame * 0.12 + 2) * 12} r="10" fill={INK} />
+          </svg>
+        </div>
+
+        {/* Percentage ring */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 170,
+            top: 280,
+            opacity: interpolate(frame, [110, 140], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+            transform: `scale(${1 + Math.sin(frame * 0.05) * 0.012})`,
+          }}
+        >
+          <svg width="440" height="440" viewBox="0 0 440 440">
+            <circle cx="220" cy="220" r={ringR} stroke={LIGHT} strokeWidth="40" fill="none" opacity="0.2" />
+            <circle
+              cx="220"
+              cy="220"
+              r={ringR}
+              stroke={GOLD}
+              strokeWidth="40"
+              fill="none"
+              strokeDasharray={`${(ringC * pct) / 100} ${ringC}`}
+              transform="rotate(-90 220 220)"
+            />
+            <text
+              x="220"
+              y="238"
+              textAnchor="middle"
+              fill={LIGHT}
+              fontFamily="Clash Display, Anton, sans-serif"
+              fontSize="130"
+              fontWeight="700"
+            >
+              {Math.round(pct)}%
+            </text>
+          </svg>
+          <div
+            style={{
+              textAlign: 'center',
+              fontFamily: 'Montserrat, sans-serif',
+              fontSize: 38,
+              fontWeight: 600,
+              color: LIGHT,
+              opacity: 0.9,
+              marginTop: 4,
+            }}
+          >
+            d’achats impulsifs éliminés
+          </div>
+        </div>
+
+        {/* Collage note */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 700,
+            bottom: 120,
+            padding: '20px 32px',
+            backgroundColor: LIGHT,
+            transform: `rotate(-3deg) scale(${sp(260)})`,
+            opacity: sp(260),
+            boxShadow: `10px 10px 0px ${INK}`,
+          }}
+        >
+          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 30, color: INK, fontWeight: 700 }}>
+            &gt; 50 € = TU CALCULES AVANT
+          </span>
         </div>
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.58) 100%)',
+        }}
+      />
 
       {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
       </div>
     </AbsoluteFill>
   );
 };
 
-export default Scene04_WhoFiles;
+export default Scene17FiltreHonnetete;
 ```
 
 ```tsx
 import React from 'react';
 
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
 
 export const compositionConfig = {
-  id: 'Scene05_ExtraWindowPortal',
-  durationInSeconds: 29.454,
+  id: 'Scene18TestDuRemplacement',
+  durationInSeconds: 30,
   fps: 30,
   width: 1920,
   height: 1080,
@@ -598,439 +2294,305 @@ const seededRandom = (seed: number): number => {
   return x - Math.floor(x);
 };
 
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
 const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
 
-const Scene05_ExtraWindowPortal: React.FC = () => {
+const Scene18TestDuRemplacement: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
   const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
 
   const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
   });
 
-  // Camera pans up mid-scene (timeline → portal story)
-  const camY = interpolate(frame, [0, 380, 500, durationInFrames], [0, 0, -40, -40], { easing: Easing.inOut(Easing.quad), extrapolateRight: 'clamp' });
+  // Camera — push in on the empty shelf
+  const camScale = interpolate(frame, [0, durationInFrames], [1.0, 1.11], { extrapolateRight: 'clamp' });
+  const camY = interpolate(frame, [0, durationInFrames], [-16, 16], { extrapolateRight: 'clamp' });
 
-  // Timeline bar grows, then +1 MONTH extension chunk snaps on
-  const barW = interpolate(frame, [60, 140], [0, 900], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
-  const extW = interpolate(sp(180, { stiffness: 160 }), [0, 1], [0, 300]);
+  // Objects vanish one by one
+  const vanish = (i: number) =>
+    interpolate(frame, [150 + i * 34, 186 + i * 34], [1, 0], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: Easing.in(Easing.quad),
+    });
 
-  // Portal overload: server card jitters + load bar spikes
-  const overloadF = 480;
-  const jitter = frame >= overloadF ? Math.sin(frame * 2.8) * 3 : 0;
+  const questionIn = sp(300, { damping: 10 });
+
+  const items = ['SORBETIÈRE', 'FRITEUSE', 'RACLETTE ×12', 'VESTE 2019'];
 
   return (
     <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(160deg, ${DEEP} 0%, ${BG} 55%, #5F4CB8 100%)`,
+        }}
+      />
 
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `radial-gradient(130% 100% at 50% 110%, ${DEEP} 0%, ${BG} 55%)` }} />
-
-      {/* Collage shapes */}
-      <div style={{ position: 'absolute', top: 140, left: -120, width: 460, height: 460, borderRadius: '50%', background: PAPER, opacity: 0.05, transform: `scale(${1 + Math.sin(frame * 0.025) * 0.05})` }} />
-      <div style={{ position: 'absolute', top: -70, right: 160, width: 420, height: 180, background: INK, opacity: 0.10, transform: 'rotate(4deg)' }} />
-      <div style={{ position: 'absolute', bottom: 120, right: -90, width: 340, height: 340, border: `20px solid ${GOLD}`, opacity: 0.10, transform: `rotate(${frame * 0.15}deg)` }} />
-
-      {/* Halftone texture */}
-      <AbsoluteFill style={{ backgroundImage: `radial-gradient(${PAPER} 1.6px, transparent 1.6px)`, backgroundSize: '34px 34px', opacity: 0.05 }} />
-
-      {/* Particles */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 9) * 1920,
-          top: (seededRandom(i + 27) * 1080 + frame * 0.35) % 1080,
-          width: 5, height: 5, background: i % 2 ? GOLD : PAPER, opacity: 0.25,
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `translateY(${camY}px)` }}>
-
-        {/* Headline */}
-        <div style={{ position: 'absolute', top: 80, left: 150, transform: `translateX(${interpolate(sp(5), [0, 1], [-600, 0])}px) rotate(-1.4deg)` }}>
-          <span style={{ background: GOLD, color: INK, padding: '16px 40px', fontFamily: 'Yantra One', fontSize: 78, boxShadow: `10px 10px 0 ${INK}` }}>
-            EXTRA 1 MONTH क्यों मिला?
-          </span>
-        </div>
-
-        {/* Timeline: July 31 → Aug 31 extension */}
-        <div style={{ position: 'absolute', top: 300, left: 260 }}>
-          <div style={{ width: barW, height: 70, background: PAPER, boxShadow: `8px 8px 0 ${INK}` }} />
-          <div style={{ position: 'absolute', left: 900, top: 0, width: extW, height: 70, background: GOLD, boxShadow: `8px 8px 0 ${INK}`, overflow: 'hidden' }}>
-            <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 38, color: INK, lineHeight: '70px', textAlign: 'center', whiteSpace: 'nowrap' }}>+1 MONTH</div>
-          </div>
-          <div style={{ position: 'absolute', left: 0, top: 90, fontFamily: 'JetBrains Mono', fontSize: 36, color: INK, fontWeight: 700, opacity: barW > 100 ? 1 : 0 }}>JULY 31</div>
-          <div style={{ position: 'absolute', left: 1120, top: 90, fontFamily: 'JetBrains Mono', fontSize: 36, color: PAPER, fontWeight: 700, textShadow: `3px 3px 0 ${INK}`, opacity: extW > 200 ? 1 : 0, transform: `scale(${1 + Math.sin(frame * 0.09) * 0.04})` }}>AUG 31</div>
-        </div>
-
-        {/* Why: books of accounts card */}
-        <div style={{
-          position: 'absolute', top: 470, left: 260, width: 640,
-          transform: `rotate(1.2deg) scale(${sp(280)})`,
-          background: PAPER, color: INK, padding: '26px 34px', boxShadow: `10px 10px 0 ${INK}`,
-          fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 40, lineHeight: 1.35,
-        }}>
-          ताकि non-audit business/professionals अपनी<br />
-          <span style={{ background: GOLD, padding: '2px 12px' }}>Books of Accounts</span> complete कर सकें
-        </div>
-
-        {/* Last year portal crash story — server card */}
-        <div style={{
-          position: 'absolute', top: 430, right: 170, width: 520,
-          transform: `translateX(${interpolate(sp(overloadF - 40), [0, 1], [700, 0])}px) translateY(${jitter}px) rotate(-2deg)`,
-          background: INK, color: PAPER, padding: '30px 36px', boxShadow: `10px 10px 0 ${DEEP}`,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <svg width="64" height="64" viewBox="0 0 24 24">
-              <rect x="4" y="4" width="16" height="7" fill="none" stroke={GOLD} strokeWidth="1.8" />
-              <rect x="4" y="13" width="16" height="7" fill="none" stroke={GOLD} strokeWidth="1.8" />
-              <circle cx="7.5" cy="7.5" r="1.2" fill={frame % 20 < 10 ? '#ff0000' : GOLD} />
-              <circle cx="7.5" cy="16.5" r="1.2" fill={frame % 26 < 13 ? GOLD : '#ff0000'} />
-            </svg>
-            <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 40 }}>PORTAL OVERLOAD</div>
-          </div>
-          {/* Load bar spiking */}
-          <div style={{ marginTop: 22, height: 30, background: 'rgba(238,245,255,0.15)' }}>
-            <div style={{
-              height: '100%', background: '#ff0000',
-              width: `${interpolate(frame, [overloadF, overloadF + 60], [20, 98], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) + Math.sin(frame * 0.4) * 2}%`,
-            }} />
-          </div>
-          <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 32, marginTop: 18 }}>
-            पिछले साल: load इतना कि CBDT को deadline extend करनी पड़ी
-          </div>
-        </div>
-
-        {/* Punchline */}
-        <div style={{
-          position: 'absolute', bottom: 70, left: 0, right: 0, textAlign: 'center',
-          opacity: interpolate(frame, [700, 730], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-          fontFamily: 'Yantra One', fontSize: 68, color: PAPER, textShadow: `6px 6px 0 ${INK}`,
-        }}>
-          मौका मिला है — बर्बाद मत करो
-        </div>
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            right: 120,
+            top: 60 + Math.sin(frame * 0.014) * 26,
+            width: 420,
+            height: 420,
+            borderRadius: '50%',
+            backgroundColor: LIGHT,
+            opacity: 0.05,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: 40,
+            bottom: -120,
+            width: 700,
+            height: 700,
+            border: `3px solid ${GOLD}`,
+            opacity: 0.07,
+            transform: `rotate(${frame * 0.05}deg)`,
+          }}
+        />
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
+      {/* Motion texture — night stars grid */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `radial-gradient(${LIGHT} 1.6px, transparent 1.6px)`,
+          backgroundSize: '58px 58px',
+          opacity: 0.08 + Math.sin(frame * 0.05) * 0.02,
+        }}
+      />
 
-      {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-export default Scene05_ExtraWindowPortal;
-```
-
-```tsx
-import React from 'react';
-
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
-
-export const compositionConfig = {
-  id: 'Scene06_234FSlabs',
-  durationInSeconds: 29.454,
-  fps: 30,
-  width: 1920,
-  height: 1080,
-};
-
-const seededRandom = (seed: number): number => {
-  const x = Math.sin(seed * 9999) * 10000;
-  return x - Math.floor(x);
-};
-
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
-const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
-
-const Scene06_234FSlabs: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
-
-  const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
-
-  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-  });
-
-  // Camera: subtle orbit (rotate + scale breathing)
-  const camRot = Math.sin(frame * 0.008) * 1.2;
-  const camZoom = 1.03 + Math.sin(frame * 0.006) * 0.02;
-
-  const fee1 = Math.floor(interpolate(frame, [300, 350], [0, 1000], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }));
-  const fee2 = Math.floor(interpolate(frame, [380, 440], [0, 5000], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }));
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
-
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `linear-gradient(120deg, ${BG} 55%, ${DEEP} 100%)` }} />
-
-      {/* Collage: caution-tape stripes */}
-      <div style={{
-        position: 'absolute', top: 210, left: -80, width: '115%', height: 66, opacity: 0.16,
-        background: `repeating-linear-gradient(45deg, ${INK} 0 40px, ${GOLD} 40px 80px)`,
-        transform: `rotate(-3deg) translateX(${(-frame * 0.6) % 80}px)`,
-      }} />
-      <div style={{
-        position: 'absolute', bottom: 150, left: -80, width: '115%', height: 66, opacity: 0.16,
-        background: `repeating-linear-gradient(45deg, ${INK} 0 40px, ${GOLD} 40px 80px)`,
-        transform: `rotate(2.5deg) translateX(${(frame * 0.6) % 80}px)`,
-      }} />
-      <div style={{ position: 'absolute', top: -100, right: -80, width: 440, height: 440, borderRadius: '50%', background: INK, opacity: 0.08 }} />
-
-      {/* Dot texture */}
-      <AbsoluteFill style={{ backgroundImage: `radial-gradient(${INK} 2px, transparent 2px)`, backgroundSize: '40px 40px', opacity: 0.05 }} />
-
-      {/* Particles */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 13) * 1920,
-          top: (seededRandom(i + 29) * 1080 + frame * (0.25 + seededRandom(i + 4) * 0.3)) % 1080,
-          width: 6, height: 6, background: i % 3 === 0 ? '#ff0000' : PAPER, opacity: 0.25, transform: 'rotate(45deg)',
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `rotate(${camRot}deg) scale(${camZoom})` }}>
-
-        {/* Beat 1: no guarantee warning strip */}
-        <div style={{
-          position: 'absolute', top: 90, left: 0, right: 0, textAlign: 'center',
-          transform: `translateY(${interpolate(sp(5), [0, 1], [-140, 0])}px) rotate(-1deg)`,
-        }}>
-          <span style={{ background: '#ff0000', color: PAPER, padding: '14px 40px', fontFamily: 'Noto Sans Devanagari', fontWeight: 900, fontSize: 54, boxShadow: `9px 9px 0 ${INK}` }}>
-            Extension हर बार मिलेगा — कोई GUARANTEE नहीं
-          </span>
-        </div>
-
-        {/* Section 234F big mono tag */}
-        <div style={{
-          position: 'absolute', top: 230, left: 0, right: 0, textAlign: 'center',
-          transform: `scale(${sp(120, { stiffness: 180 })})`,
-        }}>
-          <span style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, fontSize: 110, color: PAPER, textShadow: `9px 9px 0 ${INK}`, letterSpacing: 6 }}>
-            SECTION 234F
-          </span>
-        </div>
-
-        {/* Two slab cards slide in from opposite sides */}
-        <div style={{
-          position: 'absolute', top: 430, left: 220, width: 640, height: 340,
-          transform: `translateX(${interpolate(sp(240), [0, 1], [-900, 0])}px) rotate(-2deg)`,
-          background: PAPER, boxShadow: `13px 13px 0 ${INK}`, padding: '34px 40px',
-        }}>
-          <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 800, fontSize: 36, color: DEEP }}>INCOME ≤ ₹5 LAKH</div>
-          <div style={{ fontFamily: 'Yantra One', fontSize: 140, color: INK, marginTop: 12 }}>₹{fee1.toLocaleString('en-IN')}</div>
-          <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 32, color: INK }}>late-filing fee</div>
-        </div>
-        <div style={{
-          position: 'absolute', top: 430, right: 220, width: 640, height: 340,
-          transform: `translateX(${interpolate(sp(320), [0, 1], [900, 0])}px) rotate(2deg) scale(${1 + (frame > 440 && frame < 460 ? Math.sin((frame - 440) * 0.3) * 0.03 : 0)})`,
-          background: INK, boxShadow: `13px 13px 0 ${DEEP}`, padding: '34px 40px',
-        }}>
-          <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 800, fontSize: 36, color: GOLD }}>INCOME &gt; ₹5 LAKH</div>
-          <div style={{ fontFamily: 'Yantra One', fontSize: 140, color: '#ff4d4d', marginTop: 12 }}>₹{fee2.toLocaleString('en-IN')}</div>
-          <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 32, color: PAPER }}>maximum late-filing fee</div>
-        </div>
-
-        {/* Bottom kicker */}
-        <div style={{
-          position: 'absolute', bottom: 55, left: 0, right: 0, textAlign: 'center',
-          opacity: interpolate(frame, [620, 650], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-          fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 46, color: PAPER, textShadow: `4px 4px 0 ${INK}`,
-        }}>
-          ये है DATE भूलने का REAL FINANCIAL DAMAGE
-        </div>
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 26 }).map((_, i) => {
+          const s = seededRandom(i + 810);
+          const s2 = seededRandom(i + 910);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 - frame * 0.045) % 110 + 110) % 110}%`,
+                width: 4 + s2 * 6,
+                height: 4 + s2 * 6,
+                borderRadius: '50%',
+                backgroundColor: LILAC,
+                opacity: 0.2 + s * 0.3,
+              }}
+            />
+          );
+        })}
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
-
-      {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-export default Scene06_234FSlabs;
-```
-
-```tsx
-import React from 'react';
-
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
-
-export const compositionConfig = {
-  id: 'Scene07_NonWaivable',
-  durationInSeconds: 29.453,
-  fps: 30,
-  width: 1920,
-  height: 1080,
-};
-
-const seededRandom = (seed: number): number => {
-  const x = Math.sin(seed * 9999) * 10000;
-  return x - Math.floor(x);
-};
-
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
-const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
-
-const Scene07_NonWaivable: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
-
-  const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
-
-  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-  });
-
-  // Terminal typewriter lines
-  const lines = ['> LATE FILING DETECTED', '> FEE ADDED: Rs 5,000', '> REQUEST? DENIED', '> EXPLANATION? DENIED', '> STATUS: KATA. KHATAM.'];
-  const lineStart = 150;
-  const perLine = 55;
-
-  // Stamp slam
-  const stampF = 60;
-  const stampS = interpolate(sp(stampF, { stiffness: 240, damping: 10 }), [0, 1], [3.4, 1]);
-  const shake = frame >= stampF && frame < stampF + 16 ? Math.sin(frame * 3.4) * interpolate(frame, [stampF, stampF + 16], [12, 0]) : 0;
-
-  const camZoom = interpolate(frame, [0, durationInFrames], [1, 1.07], { easing: Easing.inOut(Easing.quad) });
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
-
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `radial-gradient(90% 110% at 15% 85%, ${DEEP} 0%, ${BG} 55%)` }} />
-
-      {/* Collage: torn paper + cross scribbles */}
-      <div style={{ position: 'absolute', top: -60, left: -60, width: 560, height: 340, background: PAPER, opacity: 0.06, transform: 'rotate(-7deg)' }} />
-      <div style={{ position: 'absolute', bottom: -90, right: -70, width: 620, height: 300, background: INK, opacity: 0.09, transform: `rotate(${4 + Math.sin(frame * 0.02) * 1.5}deg)` }} />
-      <svg width="220" height="220" viewBox="0 0 100 100" style={{ position: 'absolute', top: 720, left: 130, opacity: 0.14, transform: `rotate(${Math.sin(frame * 0.03) * 8}deg)` }}>
-        <path d="M15 15 L85 85 M85 15 L15 85" stroke={INK} strokeWidth="14" strokeLinecap="round" />
-      </svg>
-
-      {/* Scanline texture */}
-      <AbsoluteFill style={{ backgroundImage: `repeating-linear-gradient(0deg, rgba(25,25,25,0.06) 0 2px, transparent 2px 8px)` }} />
-
-      {/* Particles */}
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: (seededRandom(i + 19) * 1920 + frame * 0.4) % 1920,
-          top: seededRandom(i + 41) * 1080,
-          width: 5, height: 5, background: i % 2 ? GOLD : PAPER, opacity: 0.22,
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `scale(${camZoom}) translateY(${shake}px)` }}>
-
-        {/* NON-WAIVABLE rubber stamp slam */}
-        <div style={{
-          position: 'absolute', top: 110, left: 140, opacity: frame >= stampF ? 0.95 : 0,
-          transform: `rotate(-9deg) scale(${stampS})`,
-          border: '11px solid #ff0000', color: '#ff0000', padding: '20px 44px',
-          fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 96, letterSpacing: 6, background: 'rgba(238,245,255,0.92)',
-          boxShadow: `10px 10px 0 rgba(25,25,25,0.5)`,
-        }}>
-          NON-WAIVABLE
-        </div>
-        <div style={{
-          position: 'absolute', top: 330, left: 200, transform: 'rotate(-2deg)',
-          opacity: interpolate(frame, [110, 135], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-          fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 48, color: INK,
-          background: GOLD, padding: '10px 26px', boxShadow: `7px 7px 0 ${INK}`,
-        }}>
-          Fee है, penalty नहीं — माफ़ी का कोई रास्ता नहीं
-        </div>
-
-        {/* E-Filing portal terminal card */}
-        <div style={{
-          position: 'absolute', top: 440, right: 170, width: 760,
-          transform: `translateY(${interpolate(sp(140), [0, 1], [500, 0])}px) rotate(1.4deg)`,
-          background: INK, boxShadow: `14px 14px 0 ${DEEP}`,
-        }}>
-          <div style={{ background: '#2D2D2D', padding: '14px 24px', display: 'flex', gap: 12, alignItems: 'center' }}>
-            <div style={{ width: 18, height: 18, borderRadius: '50%', background: '#ff0000' }} />
-            <div style={{ width: 18, height: 18, borderRadius: '50%', background: GOLD }} />
-            <span style={{ fontFamily: 'JetBrains Mono', color: '#9E9E9E', fontSize: 26, marginLeft: 14 }}>e-filing-portal — auto compute</span>
+      {/* Main content with spring animations */}
+      <AbsoluteFill style={{ transform: `scale(${camScale}) translateY(${camY}px)` }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: 90,
+            left: 110,
+            opacity: sp(4),
+            transform: `translateY(${interpolate(sp(4), [0, 1], [-50, 0])}px)`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 32,
+              letterSpacing: 8,
+              color: GOLD,
+            }}
+          >
+            PRINCIPE N°02 — LE TEST DU REMPLACEMENT
           </div>
-          <div style={{ padding: '28px 34px', minHeight: 330 }}>
-            {lines.map((ln, i) => {
-              const start = lineStart + i * perLine;
-              const chars = Math.floor(interpolate(frame, [start, start + 40], [0, ln.length], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }));
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 104,
+              color: LIGHT,
+              lineHeight: 1,
+              marginTop: 10,
+            }}
+          >
+            SI ÇA DISPARAISSAIT CETTE NUIT
+          </div>
+        </div>
+
+        {/* Shelf with vanishing objects */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 130,
+            top: 340,
+            width: 1080,
+          }}
+        >
+          <div style={{ display: 'flex', gap: 26 }}>
+            {items.map((it, i) => {
+              const enter = sp(30 + i * 18, { damping: 13 });
+              const alive = vanish(i);
               return (
-                <div key={i} style={{ fontFamily: 'JetBrains Mono', fontSize: 40, color: i >= 2 ? '#ff6b6b' : '#7CFC9A', lineHeight: 1.6 }}>
-                  {ln.slice(0, chars)}
-                  {frame >= start && chars < ln.length ? <span style={{ opacity: frame % 16 < 8 ? 1 : 0 }}>█</span> : null}
+                <div
+                  key={it}
+                  style={{
+                    width: 250,
+                    height: 250,
+                    backgroundColor: LIGHT,
+                    boxShadow: `12px 12px 0px ${INK}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 12,
+                    opacity: enter * alive,
+                    transform: `scale(${enter * (0.85 + alive * 0.15)}) rotate(${(i % 2 === 0 ? -2 : 2) * alive}deg) translateY(${(1 - alive) * -60}px)`,
+                    filter: `blur(${(1 - alive) * 6}px)`,
+                  }}
+                >
+                  <svg width="110" height="110" viewBox="0 0 110 110">
+                    {i === 0 && (
+                      <g fill={INK}>
+                        <rect x="20" y="30" width="70" height="60" rx="10" />
+                        <rect x="34" y="14" width="42" height="16" rx="6" />
+                      </g>
+                    )}
+                    {i === 1 && (
+                      <g fill={INK}>
+                        <rect x="18" y="34" width="74" height="56" rx="12" />
+                        <circle cx="55" cy="62" r="14" fill={GOLD} />
+                      </g>
+                    )}
+                    {i === 2 && (
+                      <g fill={INK}>
+                        <rect x="14" y="46" width="82" height="30" rx="8" />
+                        <rect x="26" y="26" width="58" height="18" rx="6" />
+                        <rect x="20" y="82" width="70" height="10" rx="4" />
+                      </g>
+                    )}
+                    {i === 3 && (
+                      <g fill={INK}>
+                        <path d="M30 20 L55 34 L80 20 L96 40 L84 52 L84 96 L26 96 L26 52 L14 40 Z" />
+                      </g>
+                    )}
+                  </svg>
+                  <span
+                    style={{
+                      fontFamily: 'Space Mono, monospace',
+                      fontSize: 26,
+                      color: INK,
+                      fontWeight: 700,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    {it}
+                  </span>
                 </div>
               );
             })}
           </div>
+          <div
+            style={{
+              width: '100%',
+              height: 16,
+              backgroundColor: LIGHT,
+              opacity: 0.5,
+              marginTop: 18,
+            }}
+          />
         </div>
 
-        {/* Zero tax myth-buster card */}
-        <div style={{
-          position: 'absolute', bottom: 90, left: 140, width: 660,
-          transform: `scale(${sp(560)}) rotate(-1.6deg)`,
-          background: PAPER, padding: '28px 36px', boxShadow: `11px 11px 0 ${INK}`,
-        }}>
-          <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 44, color: '#ff0000' }}>ZERO TAX ≠ ZERO FEE</div>
-          <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 36, color: INK, marginTop: 12, lineHeight: 1.35 }}>
-            पूरा TDS कट चुका हो, tax payable शून्य हो —<br />234F फिर भी लगेगी
+        {/* Question payoff */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: 140,
+            width: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            opacity: questionIn,
+            transform: `scale(${interpolate(questionIn, [0, 1], [0.82, 1])})`,
+          }}
+        >
+          <div
+            style={{
+              padding: '28px 56px',
+              backgroundColor: GOLD,
+              transform: `rotate(${Math.sin(frame * 0.04) * 0.8 - 1.4}deg)`,
+              boxShadow: `16px 16px 0px ${INK}`,
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 82,
+              color: INK,
+              textAlign: 'center',
+            }}
+          >
+            EST-CE QUE TU LE RACHÈTERAIS DEMAIN ?
           </div>
         </div>
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 40%, rgba(0,0,0,0.62) 100%)',
+        }}
+      />
 
       {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
       </div>
     </AbsoluteFill>
   );
 };
 
-export default Scene07_NonWaivable;
+export default Scene18TestDuRemplacement;
 ```
 
 ```tsx
 import React from 'react';
 
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
 
 export const compositionConfig = {
-  id: 'Scene08_234AInterestMath',
-  durationInSeconds: 29.454,
+  id: 'Scene19InertieDesObjets',
+  durationInSeconds: 30,
   fps: 30,
   width: 1920,
   height: 1080,
@@ -1041,136 +2603,280 @@ const seededRandom = (seed: number): number => {
   return x - Math.floor(x);
 };
 
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
 const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
 
-const Scene08_234AInterestMath: React.FC = () => {
+const Scene19InertieDesObjets: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
   const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
 
   const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
   });
 
-  // Camera: zoom toward the total at the end
-  const camZoom = interpolate(frame, [0, 560, durationInFrames], [1, 1.02, 1.12], { easing: Easing.inOut(Easing.quad), extrapolateRight: 'clamp' });
-  const camY = interpolate(frame, [560, durationInFrames], [0, -50], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  // Camera — slow diagonal drift
+  const camScale = interpolate(frame, [0, durationInFrames], [1.05, 1.12], { extrapolateRight: 'clamp' });
+  const camX = interpolate(frame, [0, durationInFrames], [-40, 40], { extrapolateRight: 'clamp' });
 
-  const totalF = 560;
-  const total = Math.floor(interpolate(frame, [totalF, totalF + 50], [0, 6500], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }));
-  const totalShake = frame >= totalF + 50 && frame < totalF + 66 ? Math.sin(frame * 3.2) * interpolate(frame, [totalF + 50, totalF + 66], [9, 0]) : 0;
+  const stampIn = sp(200, { damping: 8, stiffness: 100 });
+  const impact = frame > 200 && frame < 218 ? Math.sin(frame * 3.2) * 8 : 0;
 
-  const rows = [
-    { delay: 130, label: 'OUTSTANDING TAX', value: '₹50,000', accent: false },
-    { delay: 230, label: '234A INTEREST — 1% × 3 MONTHS', value: '+ ₹1,500', accent: true },
-    { delay: 330, label: '234F LATE FEE', value: '+ ₹5,000', accent: true },
+  const labels = [
+    'MACHINE À PAIN',
+    'KIT DE MACRAMÉ',
+    'PATINS À GLACE',
+    'CLAVIER SYNTHÉ',
+    'VÉLO ELLIPTIQUE',
+    'CARTONS FERMÉS',
   ];
 
   return (
     <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(circle at 20% 80%, #6957CE 0%, ${BG} 46%, ${DEEP} 100%)`,
+        }}
+      />
 
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `linear-gradient(200deg, ${BG} 50%, ${DEEP} 100%)` }} />
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: 500,
+            top: -200,
+            width: 900,
+            height: 900,
+            borderRadius: '50%',
+            backgroundColor: LIGHT,
+            opacity: 0.035,
+            transform: `scale(${1 + Math.sin(frame * 0.017) * 0.05})`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: 60,
+            top: 400,
+            width: 480,
+            height: 480,
+            backgroundColor: GOLD,
+            opacity: 0.05,
+            transform: `rotate(${-frame * 0.06}deg)`,
+          }}
+        />
+      </AbsoluteFill>
 
-      {/* Collage: big % symbols + paper scraps */}
-      <div style={{ position: 'absolute', top: 60, right: 100, fontFamily: 'Yantra One', fontSize: 380, color: INK, opacity: 0.07, transform: `rotate(${12 + Math.sin(frame * 0.02) * 2}deg)` }}>%</div>
-      <div style={{ position: 'absolute', bottom: -70, left: -60, width: 540, height: 280, background: PAPER, opacity: 0.06, transform: 'rotate(6deg)' }} />
-      <div style={{ position: 'absolute', top: -80, left: 300, width: 300, height: 200, background: GOLD, opacity: 0.09, transform: 'rotate(-8deg)' }} />
+      {/* Motion texture — drifting dust lines */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `repeating-linear-gradient(115deg, ${LIGHT} 0px, ${LIGHT} 1.4px, transparent 1.4px, transparent 40px)`,
+          opacity: 0.05,
+          transform: `translateY(${(frame * 0.35) % 40}px)`,
+        }}
+      />
 
-      {/* Ledger-line texture */}
-      <AbsoluteFill style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent 0 78px, rgba(25,25,25,0.07) 78px 80px)` }} />
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 34 }).map((_, i) => {
+          const s = seededRandom(i + 1010);
+          const s2 = seededRandom(i + 1120);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 + frame * 0.03) % 110) - 5}%`,
+                width: 3 + s * 4,
+                height: 3 + s * 4,
+                borderRadius: '50%',
+                backgroundColor: LIGHT,
+                opacity: 0.12 + s2 * 0.2,
+              }}
+            />
+          );
+        })}
+      </AbsoluteFill>
 
-      {/* Particles: falling rupee squares */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 23) * 1920,
-          top: (seededRandom(i + 47) * 1080 + frame * (0.5 + seededRandom(i + 6) * 0.6)) % 1080,
-          fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 26, color: i % 3 ? PAPER : GOLD, opacity: 0.22,
-          transform: `rotate(${frame * 1.5 + i * 30}deg)`,
-        }}>₹</div>
-      ))}
+      {/* Main content with spring animations */}
+      <AbsoluteFill style={{ transform: `scale(${camScale}) translateX(${camX + impact}px)` }}>
+        {/* Drifting object chips — inertia field */}
+        <AbsoluteFill>
+          {labels.map((l, i) => {
+            const s = seededRandom(i + 5);
+            const enter = sp(20 + i * 16, { damping: 14 });
+            const driftX = Math.sin(frame * 0.012 + i) * 26;
+            const driftY = Math.cos(frame * 0.011 + i * 1.7) * 20;
+            const left = [90, 1380, 210, 1500, 120, 1330][i];
+            const top = [230, 190, 640, 560, 850, 840][i];
+            return (
+              <div
+                key={l}
+                style={{
+                  position: 'absolute',
+                  left,
+                  top,
+                  padding: '18px 28px',
+                  backgroundColor: i % 3 === 0 ? GOLD : LIGHT,
+                  color: INK,
+                  fontFamily: 'Space Mono, monospace',
+                  fontSize: 28,
+                  fontWeight: 700,
+                  letterSpacing: 1,
+                  boxShadow: `10px 10px 0px ${INK}`,
+                  opacity: enter * 0.95,
+                  transform: `translate(${driftX}px, ${driftY}px) rotate(${(s * 10 - 5).toFixed(2)}deg) scale(${enter})`,
+                  clipPath: 'polygon(0% 6%, 100% 0%, 99% 94%, 1% 100%)',
+                }}
+              >
+                {l}
+              </div>
+            );
+          })}
+        </AbsoluteFill>
 
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `scale(${camZoom}) translateY(${camY}px) translateX(${totalShake}px)` }}>
-
-        {/* Header tag */}
-        <div style={{ position: 'absolute', top: 80, left: 0, right: 0, textAlign: 'center', transform: `scale(${sp(5)})` }}>
-          <span style={{ background: INK, color: GOLD, padding: '16px 42px', fontFamily: 'JetBrains Mono', fontWeight: 700, fontSize: 74, boxShadow: `10px 10px 0 ${DEEP}`, letterSpacing: 4 }}>
-            SECTION 234A — 1% / MONTH
-          </span>
-        </div>
-
-        {/* Receipt-style math stack */}
-        <div style={{ position: 'absolute', top: 250, left: 460, width: 1000 }}>
-          {rows.map((r, i) => (
-            <div key={r.label} style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              background: r.accent ? PAPER : GOLD, marginBottom: 26, padding: '24px 40px',
-              boxShadow: `9px 9px 0 ${INK}`,
-              transform: `rotate(${i % 2 ? 0.8 : -0.8}deg) translateX(${interpolate(sp(r.delay), [0, 1], [i % 2 ? 800 : -800, 0])}px)`,
-            }}>
-              <span style={{ fontFamily: 'Inter, Poppins', fontWeight: 800, fontSize: 38, color: INK }}>{r.label}</span>
-              <span style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, fontSize: 56, color: r.accent ? '#ff0000' : INK }}>{r.value}</span>
-            </div>
-          ))}
-
-          {/* Torn divider */}
-          <svg width="1000" height="20" style={{ opacity: interpolate(frame, [440, 470], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) }}>
-            <path d="M0 10 L1000 10" stroke={INK} strokeWidth="6" strokeDasharray="26 16" />
-          </svg>
-
-          {/* Total slam with counter */}
-          <div style={{
-            marginTop: 26, background: INK, padding: '30px 40px', boxShadow: `12px 12px 0 ${DEEP}`,
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            transform: `scale(${interpolate(sp(totalF, { stiffness: 200, damping: 10 }), [0, 1], [1.5, 1])}) rotate(-1deg)`,
-            opacity: frame >= totalF ? 1 : 0,
-          }}>
-            <span style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 900, fontSize: 44, color: PAPER }}>TOTAL DAMAGE</span>
-            <span style={{ fontFamily: 'Yantra One', fontSize: 120, color: '#ff4d4d' }}>₹{total.toLocaleString('en-IN')}</span>
+        {/* Central typographic block */}
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: 900,
+            marginLeft: -450,
+            marginTop: -230,
+            textAlign: 'center',
+            opacity: sp(90),
+            transform: `scale(${interpolate(sp(90), [0, 1], [0.86, 1])})`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Clash Display, Anton, sans-serif',
+              fontSize: 128,
+              lineHeight: 0.94,
+              color: LIGHT,
+              fontWeight: 700,
+            }}
+          >
+            ILS EXISTENT PAR
+          </div>
+          <div
+            style={{
+              display: 'inline-block',
+              marginTop: 14,
+              padding: '10px 34px',
+              backgroundColor: LIGHT,
+              transform: `rotate(-1.6deg) scale(${sp(130)})`,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'Clash Display, Anton, sans-serif',
+                fontSize: 150,
+                color: INK,
+                fontWeight: 700,
+              }}
+            >
+              INERTIE
+            </span>
+          </div>
+          <div
+            style={{
+              marginTop: 26,
+              fontFamily: 'Montserrat, Poppins, sans-serif',
+              fontSize: 46,
+              fontWeight: 500,
+              color: LILAC,
+              opacity: sp(160),
+            }}
+          >
+            pas par choix — et tu payes chaque mois pour les stocker
           </div>
         </div>
 
-        {/* Bottom sting */}
-        <div style={{
-          position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center',
-          opacity: interpolate(frame, [680, 710], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-          fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 50, color: PAPER, textShadow: `5px 5px 0 ${INK}`,
-        }}>
-          सिर्फ़ इसलिए कि DATE याद नहीं रखी
+        {/* Stamp — destination */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 210,
+            bottom: 120,
+            padding: '16px 36px',
+            border: `7px solid ${GOLD}`,
+            transform: `rotate(-7deg) scale(${interpolate(stampIn, [0, 1], [1.9, 1])})`,
+            opacity: stampIn,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 64,
+              color: GOLD,
+              letterSpacing: 3,
+            }}
+          >
+            LE BON COIN · VINTED · EMMAÜS
+          </span>
         </div>
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.62) 100%)',
+        }}
+      />
 
       {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
       </div>
     </AbsoluteFill>
   );
 };
 
-export default Scene08_234AInterestMath;
+export default Scene19InertieDesObjets;
 ```
 
 ```tsx
 import React from 'react';
 
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Easing,
+  spring,
+  AbsoluteFill,
+} from 'remotion';
 
 export const compositionConfig = {
-  id: 'Scene09_LossCarryForward',
-  durationInSeconds: 29.454,
+  id: 'Scene20CaFonctionnePoint',
+  durationInSeconds: 30,
   fps: 30,
   width: 1920,
   height: 1080,
@@ -1181,300 +2887,313 @@ const seededRandom = (seed: number): number => {
   return x - Math.floor(x);
 };
 
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
+const BG = '#504099';
+const LIGHT = '#F5F5F5';
+const INK = '#000000';
+const LILAC = '#C7B9FF';
+const DEEP = '#2C2160';
 const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
 
-const Scene09_LossCarryForward: React.FC = () => {
+const Scene20CaFonctionnePoint: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
   const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
+    spring({
+      frame: Math.max(0, frame - delay),
+      fps,
+      config: { damping: 12, mass: 0.4, stiffness: 120, ...config },
+    });
 
   const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
   });
 
-  // Camera: slow lateral pan
-  const camX = interpolate(frame, [0, durationInFrames], [-25, 25], { easing: Easing.inOut(Easing.quad) });
+  // Camera — locked push then micro tilt
+  const camScale = interpolate(frame, [0, 160], [1.14, 1.0], {
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
+  const camRot = Math.sin(frame * 0.007) * 0.8;
 
-  // Chart line draw-on
-  const chartDraw = interpolate(frame, [120, 240], [1400, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.cubic) });
+  const phoneIn = sp(24, { damping: 14 });
+  const cycleShift = -((frame * 1.9) % 380);
 
-  // Big X slash over carry-forward arrow
-  const slashF = 380;
-  const slashDraw = interpolate(frame, [slashF, slashF + 25], [300, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const shake = frame >= slashF && frame < slashF + 14 ? Math.sin(frame * 3.6) * interpolate(frame, [slashF, slashF + 14], [10, 0]) : 0;
+  const counter = Math.round(
+    interpolate(frame, [230, 400], [0, 25000], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+  );
+  const pointIn = sp(420, { damping: 9 });
+  const impact = frame > 420 && frame < 438 ? Math.sin(frame * 3) * 7 : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
+      {/* Dynamic gradient background */}
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(20deg, ${DEEP} 0%, ${BG} 50%, #7261DA 100%)`,
+        }}
+      />
 
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `radial-gradient(120% 100% at 85% 90%, ${DEEP} 0%, ${BG} 55%)` }} />
+      {/* Animated shape layers */}
+      <AbsoluteFill>
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            width: 980,
+            height: 980,
+            marginLeft: -490,
+            marginTop: -490,
+            border: `100px solid ${LIGHT}`,
+            borderRadius: '50%',
+            opacity: 0.04,
+            transform: `scale(${1 + Math.sin(frame * 0.02) * 0.05})`,
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            right: 100,
+            top: 120,
+            width: 420,
+            height: 420,
+            backgroundColor: GOLD,
+            opacity: 0.06,
+            transform: `rotate(${25 + frame * 0.05}deg)`,
+          }}
+        />
+      </AbsoluteFill>
 
-      {/* Collage: paper scraps + arrows */}
-      <div style={{ position: 'absolute', top: -70, left: -40, width: 620, height: 260, background: INK, opacity: 0.09, transform: 'rotate(-4deg)' }} />
-      <div style={{ position: 'absolute', bottom: -60, right: 240, width: 480, height: 220, background: PAPER, opacity: 0.06, transform: `rotate(${3 + Math.sin(frame * 0.02) * 1.4}deg)` }} />
-      <svg width="200" height="200" viewBox="0 0 100 100" style={{ position: 'absolute', top: 120, right: 130, opacity: 0.13, transform: `rotate(${frame * 0.2}deg)` }}>
-        <polygon points="50,0 61,35 98,35 68,57 79,92 50,70 21,92 32,57 2,35 39,35" fill={GOLD} />
-      </svg>
+      {/* Motion texture — ticker grid */}
+      <AbsoluteFill
+        style={{
+          backgroundImage: `linear-gradient(90deg, ${LIGHT} 1px, transparent 1px)`,
+          backgroundSize: '110px 100%',
+          opacity: 0.06,
+          transform: `translateX(${(frame * 0.7) % 110}px)`,
+        }}
+      />
 
-      {/* Cross-hatch texture */}
-      <AbsoluteFill style={{ backgroundImage: `repeating-linear-gradient(-45deg, ${INK} 0 1.6px, transparent 1.6px 40px)`, opacity: 0.05 }} />
+      {/* Floating particles */}
+      <AbsoluteFill>
+        {Array.from({ length: 22 }).map((_, i) => {
+          const s = seededRandom(i + 1300);
+          const s2 = seededRandom(i + 1400);
+          return (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                left: `${s * 100}%`,
+                top: `${((s2 * 100 + frame * 0.06) % 110) - 5}%`,
+                width: 6,
+                height: 18,
+                backgroundColor: i % 3 === 0 ? GOLD : LIGHT,
+                opacity: 0.12 + s * 0.26,
+                transform: `rotate(${s * 30}deg)`,
+              }}
+            />
+          );
+        })}
+      </AbsoluteFill>
 
-      {/* Particles */}
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 31) * 1920,
-          top: (seededRandom(i + 53) * 1080 + frame * 0.3) % 1080,
-          width: 6, height: 6, borderRadius: '50%', background: i % 2 ? PAPER : GOLD, opacity: 0.24,
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `translateX(${camX + shake}px)` }}>
-
-        {/* Headline */}
-        <div style={{ position: 'absolute', top: 80, left: 140, transform: `translateY(${interpolate(sp(5), [0, 1], [-150, 0])}px) rotate(-1.2deg)` }}>
-          <span style={{ background: PAPER, color: INK, padding: '16px 40px', fontFamily: 'Yantra One', fontSize: 80, boxShadow: `10px 10px 0 ${INK}` }}>
-            LOSS CARRY FORWARD — GAYA
+      {/* Main content with spring animations */}
+      <AbsoluteFill
+        style={{ transform: `scale(${camScale}) rotate(${camRot}deg) translateX(${impact}px)` }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            top: 80,
+            left: 0,
+            width: '100%',
+            textAlign: 'center',
+            opacity: sp(4),
+          }}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              padding: '12px 38px',
+              backgroundColor: GOLD,
+              color: INK,
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 32,
+              letterSpacing: 8,
+              fontWeight: 700,
+              transform: 'rotate(1.2deg)',
+            }}
+          >
+            PRINCIPE N°03
           </span>
         </div>
 
-        {/* Falling stock chart card */}
-        <div style={{
-          position: 'absolute', top: 250, left: 150, width: 820, height: 520,
-          background: INK, boxShadow: `14px 14px 0 ${DEEP}`, transform: `rotate(-1.5deg) scale(${sp(60)})`,
-        }}>
-          <div style={{ fontFamily: 'JetBrains Mono', color: '#9E9E9E', fontSize: 30, padding: '20px 30px' }}>STOCKS — THIS YEAR</div>
-          <svg width="760" height="380" viewBox="0 0 760 380" style={{ marginLeft: 30 }}>
-            <path d="M0 340 H760 M0 260 H760 M0 180 H760 M0 100 H760" stroke="rgba(238,245,255,0.12)" strokeWidth="2" />
-            <path d="M20 80 L150 140 L280 110 L410 220 L540 200 L700 340"
-              fill="none" stroke="#ff4d4d" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"
-              strokeDasharray={1400} strokeDashoffset={chartDraw} />
-            {/* Down arrowhead pulses at line end */}
-            <polygon points="700,340 668,318 690,304" fill="#ff4d4d"
-              opacity={frame > 240 ? 0.7 + Math.sin(frame * 0.15) * 0.3 : 0} />
+        {/* Phone icon — still perfectly working */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 230,
+            top: 240,
+            transform: `translateY(${interpolate(phoneIn, [0, 1], [140, 0]) + Math.sin(frame * 0.05) * 5}px) rotate(${Math.sin(frame * 0.04) * 1.6}deg) scale(${phoneIn})`,
+            opacity: phoneIn,
+          }}
+        >
+          <svg width="330" height="560" viewBox="0 0 330 560">
+            <rect x="30" y="20" width="270" height="520" rx="42" fill={LIGHT} />
+            <rect x="52" y="60" width="226" height="430" rx="18" fill={INK} />
+            <rect x="132" y="34" width="66" height="12" rx="6" fill={INK} opacity="0.6" />
+            <circle cx="165" cy="514" r="18" fill={INK} opacity="0.35" />
+            <rect
+              x="80"
+              y={110 + Math.sin(frame * 0.06) * 6}
+              width="170"
+              height="18"
+              rx="9"
+              fill={GOLD}
+              opacity="0.9"
+            />
+            <rect x="80" y="160" width="120" height="14" rx="7" fill={LIGHT} opacity="0.45" />
+            <rect x="80" y="196" width="150" height="14" rx="7" fill={LIGHT} opacity="0.3" />
+            <circle cx="165" cy="330" r={40 + Math.sin(frame * 0.12) * 3} fill={LIGHT} opacity="0.16" />
           </svg>
-          <div style={{ position: 'absolute', bottom: 26, right: 34, fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 44, color: '#ff4d4d' }}>LOSS ₹₹₹</div>
         </div>
 
-        {/* Carry-forward arrow to NEXT YEAR — then slashed */}
-        <div style={{ position: 'absolute', top: 330, right: 150, width: 700 }}>
-          <div style={{
-            background: GOLD, color: INK, padding: '22px 34px', fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 40,
-            boxShadow: `9px 9px 0 ${INK}`, transform: `rotate(1.5deg) scale(${sp(270)})`,
-          }}>
-            Plan था: अगले साल के PROFIT से adjust
+        {/* Typographic verdict */}
+        <div
+          style={{
+            position: 'absolute',
+            right: 140,
+            top: 250,
+            width: 900,
+            opacity: sp(70),
+            transform: `translateX(${interpolate(sp(70), [0, 1], [120, 0])}px)`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'Anton, sans-serif',
+              fontSize: 118,
+              lineHeight: 0.96,
+              color: LIGHT,
+            }}
+          >
+            IL FONCTIONNE.
           </div>
-          <svg width="620" height="240" viewBox="0 0 620 240" style={{ marginTop: 20, opacity: sp(300) }}>
-            <path d="M40 60 C 240 20, 420 20, 560 90" fill="none" stroke={PAPER} strokeWidth="10" strokeDasharray="30 18" />
-            <polygon points="580,100 540,72 548,110" fill={PAPER} />
-            {/* Red slash kills the arrow */}
-            <path d="M120 10 L500 190" stroke="#ff0000" strokeWidth="22" strokeLinecap="round"
-              strokeDasharray={300} strokeDashoffset={slashDraw} />
-            <path d="M500 10 L120 190" stroke="#ff0000" strokeWidth="22" strokeLinecap="round"
-              strokeDasharray={300} strokeDashoffset={slashDraw} />
-          </svg>
-          <div style={{
-            fontFamily: 'Yantra One', fontSize: 92, color: '#ff0000', textShadow: `6px 6px 0 ${INK}`, textAlign: 'center',
-            transform: `scale(${interpolate(sp(slashF + 20, { stiffness: 210 }), [0, 1], [2.2, 1])}) rotate(-3deg)`,
-            opacity: frame >= slashF + 20 ? 1 : 0,
-          }}>
-            OPTION खत्म
+          <div
+            style={{
+              display: 'inline-block',
+              marginTop: 10,
+              padding: '6px 30px',
+              backgroundColor: LIGHT,
+              transform: `rotate(-2deg) scale(${pointIn === 0 ? 1 : interpolate(pointIn, [0, 1], [1.6, 1])})`,
+              opacity: pointIn,
+            }}
+          >
+            <span style={{ fontFamily: 'Anton, sans-serif', fontSize: 118, color: INK }}>POINT.</span>
+          </div>
+
+          <div
+            style={{
+              marginTop: 40,
+              padding: '26px 34px',
+              backgroundColor: INK,
+              border: `5px solid ${LIGHT}`,
+              transform: 'rotate(0.8deg)',
+              opacity: interpolate(frame, [220, 250], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+            }}
+          >
+            <div
+              style={{
+                fontFamily: 'Montserrat, sans-serif',
+                fontSize: 30,
+                fontWeight: 600,
+                letterSpacing: 3,
+                color: LILAC,
+              }}
+            >
+              CHANGER DE SMARTPHONE TOUS LES 2,5 ANS
+            </div>
+            <div
+              style={{
+                fontFamily: 'Clash Display, Anton, sans-serif',
+                fontSize: 130,
+                lineHeight: 1,
+                color: GOLD,
+                fontWeight: 700,
+              }}
+            >
+              {counter.toLocaleString('fr-FR')} €
+            </div>
+            <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 32, color: LIGHT, opacity: 0.85 }}>
+              sur 30 ans de vie active
+            </div>
           </div>
         </div>
 
-        {/* Bottom takeaway */}
-        <div style={{
-          position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center',
-          transform: `translateY(${interpolate(sp(600), [0, 1], [120, 0])}px)`,
-        }}>
-          <span style={{ background: INK, color: PAPER, padding: '14px 38px', fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 46, boxShadow: `8px 8px 0 ${DEEP}` }}>
-            ये नुकसान तुम्हें सालों तक FOLLOW करता है
-          </span>
+        {/* Marketing loop ticker — punk band */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            bottom: 96,
+            width: '100%',
+            height: 66,
+            backgroundColor: GOLD,
+            transform: 'rotate(1.2deg)',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              transform: `translateX(${cycleShift}px)`,
+              whiteSpace: 'nowrap',
+              fontFamily: 'Space Mono, monospace',
+              fontSize: 30,
+              letterSpacing: 6,
+              color: INK,
+              fontWeight: 700,
+            }}
+          >
+            {Array.from({ length: 10 }).map((_, i) => (
+              <span key={i} style={{ paddingRight: 50 }}>
+                NOUVEAU MODÈLE · COQUE · CHARGEUR · LA BOUCLE INFINIE ·
+              </span>
+            ))}
+          </div>
         </div>
       </AbsoluteFill>
 
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
+      {/* Vignette overlay */}
+      <AbsoluteFill
+        style={{
+          background: 'radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 42%, rgba(0,0,0,0.58) 100%)',
+        }}
+      />
 
       {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 30,
+          right: 45,
+          fontFamily: 'Montserrat, sans-serif',
+          fontSize: 22,
+          fontWeight: 600,
+          color: '#9E9E9E',
+          opacity: 0.3,
+        }}
+      >
+        Matures Finance
       </div>
     </AbsoluteFill>
   );
 };
 
-export default Scene09_LossCarryForward;
-```
-
-```tsx
-import React from 'react';
-
-import { useCurrentFrame, useVideoConfig, interpolate, Easing, spring, AbsoluteFill } from 'remotion';
-
-export const compositionConfig = {
-  id: 'Scene10_RefundStuckWindowClose',
-  durationInSeconds: 29.454,
-  fps: 30,
-  width: 1920,
-  height: 1080,
-};
-
-const seededRandom = (seed: number): number => {
-  const x = Math.sin(seed * 9999) * 10000;
-  return x - Math.floor(x);
-};
-
-const BG = '#E3651D';
-const INK = '#191919';
-const PAPER = '#EEF5FF';
-const GOLD = '#FFC107';
-const DEEP = '#B84A0F';
-
-const Scene10_RefundStuckWindowClose: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
-
-  const sp = (delay: number, config?: object) =>
-    spring({ frame: Math.max(0, frame - delay), fps, config: { damping: 12, mass: 0.4, stiffness: 120, ...config } });
-
-  const exitOp = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], {
-    extrapolateLeft: 'clamp', extrapolateRight: 'clamp',
-  });
-
-  // Camera: zoom out as story widens
-  const camZoom = interpolate(frame, [0, durationInFrames], [1.1, 1], { easing: Easing.out(Easing.quad) });
-
-  // Refund progress bar stuck at 38%
-  const prog = interpolate(frame, [90, 200], [0, 38], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-  const stuckJitter = frame > 200 ? Math.sin(frame * 0.6) * 0.6 : 0;
-
-  // Shutter slams down over AY 2021-22 card
-  const shutterF = 470;
-  const shutterH = interpolate(sp(shutterF, { stiffness: 170, damping: 13 }), [0, 1], [0, 330]);
-  const shake = frame >= shutterF + 8 && frame < shutterF + 22 ? Math.sin(frame * 3.4) * interpolate(frame, [shutterF + 8, shutterF + 22], [11, 0]) : 0;
-
-  const months = ['SEP', 'OCT', 'NOV', 'DEC'];
-
-  return (
-    <AbsoluteFill style={{ backgroundColor: BG, overflow: 'hidden', opacity: exitOp }}>
-      {/* Gradient + Shape Layers + Texture + Particles + Content + Vignette + Watermark */}
-
-      {/* Gradient */}
-      <AbsoluteFill style={{ background: `linear-gradient(160deg, ${DEEP} 0%, ${BG} 40%, ${BG} 100%)` }} />
-
-      {/* Collage shapes */}
-      <div style={{ position: 'absolute', top: -90, left: 200, width: 520, height: 240, background: PAPER, opacity: 0.06, transform: 'rotate(-5deg)' }} />
-      <div style={{ position: 'absolute', bottom: -100, left: -80, width: 480, height: 480, borderRadius: '50%', background: INK, opacity: 0.08, transform: `scale(${1 + Math.sin(frame * 0.02) * 0.04})` }} />
-      <div style={{ position: 'absolute', top: 240, right: -70, width: 320, height: 320, background: GOLD, opacity: 0.09, transform: `rotate(${frame * 0.12}deg)` }} />
-
-      {/* Halftone texture */}
-      <AbsoluteFill style={{ backgroundImage: `radial-gradient(${INK} 2px, transparent 2px)`, backgroundSize: '30px 30px', opacity: 0.05 }} />
-
-      {/* Particles */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: seededRandom(i + 37) * 1920,
-          top: (seededRandom(i + 59) * 1080 + frame * (0.2 + seededRandom(i + 8) * 0.35)) % 1080,
-          width: 6, height: 6, background: i % 3 ? PAPER : GOLD, opacity: 0.24, transform: 'rotate(45deg)',
-        }} />
-      ))}
-
-      {/* Camera */}
-      <AbsoluteFill style={{ transform: `scale(${camZoom}) translateX(${shake}px)` }}>
-
-        {/* Refund stuck card */}
-        <div style={{
-          position: 'absolute', top: 110, left: 150, width: 780,
-          transform: `rotate(-1.6deg) scale(${sp(10)})`,
-          background: PAPER, boxShadow: `13px 13px 0 ${INK}`, padding: '30px 40px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
-            <svg width="60" height="60" viewBox="0 0 24 24" style={{ transform: `rotate(${Math.sin(frame * 0.08) * 10}deg)` }}>
-              <path d="M6 3 h12 M6 21 h12 M8 3 c0 5 8 5 8 9 s-8 4 -8 9 M16 3 c0 5 -8 5 -8 9 s8 4 8 9" fill="none" stroke={DEEP} strokeWidth="1.9" strokeLinecap="round" />
-            </svg>
-            <span style={{ fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 52, color: INK }}>REFUND STATUS</span>
-          </div>
-          <div style={{ marginTop: 24, height: 46, background: 'rgba(25,25,25,0.10)', border: `4px solid ${INK}` }}>
-            <div style={{ height: '100%', width: `${prog + stuckJitter}%`, background: GOLD }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
-            <span style={{ fontFamily: 'JetBrains Mono', fontSize: 34, color: '#ff0000', fontWeight: 700, opacity: frame > 220 ? (frame % 24 < 12 ? 1 : 0.35) : 0 }}>
-              PROCESSING... STUCK
-            </span>
-            <span style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 800, fontSize: 34, color: INK }}>महीनों तक अटक सकता है</span>
-          </div>
-        </div>
-
-        {/* Months ticking past */}
-        <div style={{ position: 'absolute', top: 190, right: 170, display: 'flex', flexDirection: 'column', gap: 18 }}>
-          {months.map((m, i) => (
-            <div key={m} style={{
-              background: INK, color: i === months.length - 1 ? '#ff4d4d' : PAPER, padding: '12px 30px',
-              fontFamily: 'JetBrains Mono', fontWeight: 700, fontSize: 40, boxShadow: `7px 7px 0 ${DEEP}`,
-              transform: `rotate(${i % 2 ? 2 : -2}deg) translateX(${interpolate(sp(160 + i * 26), [0, 1], [400, 0])}px)`,
-            }}>{m} — NO REFUND</div>
-          ))}
-        </div>
-
-        {/* Double damage strip */}
-        <div style={{
-          position: 'absolute', top: 500, left: 0, right: 0, textAlign: 'center',
-          transform: `scale(${sp(330, { stiffness: 190 })}) rotate(-1deg)`,
-        }}>
-          <span style={{ background: '#ff0000', color: PAPER, padding: '16px 44px', fontFamily: 'Noto Sans Devanagari', fontWeight: 900, fontSize: 58, boxShadow: `10px 10px 0 ${INK}` }}>
-            ₹5,000 भी कटा + REFUND भी रुका
-          </span>
-        </div>
-
-        {/* AY 2021-22 window shutter teaser */}
-        <div style={{
-          position: 'absolute', bottom: 90, left: 480, width: 960, height: 330, overflow: 'hidden',
-          background: PAPER, boxShadow: `13px 13px 0 ${INK}`,
-          transform: `rotate(1.2deg) scale(${sp(410)})`,
-        }}>
-          <div style={{ padding: '30px 40px' }}>
-            <div style={{ fontFamily: 'Inter, Poppins', fontWeight: 900, fontSize: 44, color: INK }}>UPDATED RETURN — AY 2021-22</div>
-            <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 36, color: DEEP, marginTop: 14 }}>
-              1 April 2026 से window हमेशा के लिए बंद...
-            </div>
-            <div style={{ fontFamily: 'Noto Sans Devanagari', fontWeight: 700, fontSize: 32, color: INK, marginTop: 12 }}>
-              और बाकी सालों की penalty rates बदल चुकी हैं — अगले part में
-            </div>
-          </div>
-          {/* Shutter slams from top */}
-          <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: shutterH,
-            background: `repeating-linear-gradient(0deg, ${INK} 0 44px, #2D2D2D 44px 52px)`,
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          }}>
-            <span style={{ fontFamily: 'Yantra One', fontSize: 74, color: '#ff4d4d', paddingBottom: 16, opacity: shutterH > 250 ? 1 : 0, letterSpacing: 6 }}>
-              WINDOW CLOSED
-            </span>
-          </div>
-        </div>
-      </AbsoluteFill>
-
-      {/* Vignette */}
-      <AbsoluteFill style={{ background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.38) 100%)', pointerEvents: 'none' }} />
-
-      {/* Watermark */}
-      <div style={{ position: 'absolute', bottom: 30, right: 45, fontFamily: 'Inter', fontSize: 22, fontWeight: 600, color: '#9E9E9E', opacity: 0.3 }}>
-        ProBuffet HQ
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-export default Scene10_RefundStuckWindowClose;
+export default Scene20CaFonctionnePoint;
 ```
 
